@@ -1,9 +1,8 @@
-#include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glad/glad.h>
 #include <iostream>
 
-class Window
-{
+class Window {
 private:
     uint32_t width, height;
     const char *windowName;
@@ -22,17 +21,14 @@ public:
 };
 
 Window::Window(uint32_t width, uint32_t height, const char *windowName)
-    : width(width), height(height), windowName(windowName)
-{
+    : width(width), height(height), windowName(windowName) {
 }
 
-Window::~Window()
-{
+Window::~Window() {
     glfwTerminate();
 }
 
-bool Window::createWindow()
-{
+bool Window::createWindow() {
     // Initialize glfw
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -45,8 +41,7 @@ bool Window::createWindow()
 
     // Create glfw window
     window = glfwCreateWindow(width, height, windowName, NULL, NULL);
-    if (window == NULL)
-    {
+    if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
         this->~Window();
         return false; // TODO: use an enum instead?
@@ -57,8 +52,7 @@ bool Window::createWindow()
     glfwMakeContextCurrent(window);
 
     // Initialize GLAD
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "Failed to initialize GLAD" << std::endl;
         this->~Window();
         return false;
@@ -66,29 +60,23 @@ bool Window::createWindow()
     return true;
 }
 
-void Window::framebufferSizeCallback(GLFWwindow *window, int width, int height)
-{
+void Window::framebufferSizeCallback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-void Window::processInput(GLFWwindow *window)
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    {
+void Window::processInput(GLFWwindow *window) {
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
 }
 
-void Window::render()
-{
+void Window::render() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void Window::run()
-{
-    while (!glfwWindowShouldClose(window))
-    {
+void Window::run() {
+    while (!glfwWindowShouldClose(window)) {
         // Process key inputs
         processInput(window);
 
