@@ -1,6 +1,11 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <sstream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <cstring>
 
 class Window {
 private:
@@ -17,12 +22,24 @@ private:
                                                 GLsizei length,
                                                 const GLchar *message,
                                                 const void *userParam);
+    std::vector<float> vertices;
+    GLuint VAO, VBO, vertexShader, fragmentShader, shaderProgram;
+    const char *vertexShaderSource;
+    const char *fragmentShaderSource;
 
 public:
     Window(uint32_t width, uint32_t height, const char *windowName);
     ~Window();
 
+    enum ShaderType {
+        Vertex,
+        Fragment
+    };
+
     bool createWindow();
+    void setVertices(std::vector<float> vertices);
+    void loadShader(const char *filePath, Window::ShaderType type);
+    void compileShaders();
     void render();
     void run();
 };
@@ -32,6 +49,8 @@ Window::Window(uint32_t width, uint32_t height, const char *windowName)
 }
 
 Window::~Window() {
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
     glfwTerminate();
 }
 
@@ -74,6 +93,98 @@ bool Window::createWindow() {
     return true;
 }
 
+void Window::setVertices(std::vector<float> vertices) {
+    this->vertices = vertices;
+
+    // Generate and bind vertex array object
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    // Generate and bind vertex buffer object
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    // Copy data into buffer memory
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+
+    // Set vertex attributes pointers
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+}
+
+void Window::loadShader(const char *filePath, Window::ShaderType type) {
+    std::ostringstream sstream;
+    std::ifstream shaderFile(filePath);
+    
+    if (!shaderFile) {
+        std::cerr << std::strerror(errno) << ": " << filePath << std::endl;
+    }
+
+    sstream << shaderFile.rdbuf();
+    const std::string str(sstream.str());
+
+    int success;
+    char infoLog[512];
+
+    switch (type) {
+        case ShaderType::Vertex: {
+            // Compile shader
+            vertexShaderSource = str.c_str();
+            this->vertexShader = glCreateShader(GL_VERTEX_SHADER);
+            glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+            glCompileShader(vertexShader);
+
+            // Log any errors
+            glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+            if (!success) {
+                glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+                std::cerr << "[GL Error] Vertex shader compilation failed\n    "
+                          << infoLog << std::endl;
+            }
+            break;
+        }
+        case ShaderType::Fragment: {
+            fragmentShaderSource = str.c_str();
+            this->fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+            glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+            glCompileShader(fragmentShader);
+
+            glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+            if (!success) {
+                glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+                std::cerr << "[GL Error] Fragment shader compilation failed\n    "
+                          << infoLog << std::endl;
+            }
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+void Window::compileShaders() {
+    // Compile shaders into program
+    shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    int success;
+    char infoLog[512];
+
+    // Log any errors
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cerr << "[GL Error] Shader program linking failed\n    "
+                  << infoLog << std::endl;
+        return;
+    }
+
+    glUseProgram(shaderProgram);
+    glBindVertexArray(VAO);
+}
+
 void Window::framebufferSizeCallback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
 }
@@ -92,14 +203,16 @@ void GLAPIENTRY Window::debugMessageCallback(GLenum source,
                                              const GLchar *message,
                                              const void *userParam) {
 
-    fprintf(stderr, "GL callback: %s type: 0x%x, severity: 0x%x, message: %s\n",
-            type == GL_DEBUG_TYPE_ERROR ? "[GL error]" : "",
+    fprintf(stderr, "%s type: 0x%x, severity: 0x%x, message: %s\n",
+            type == GL_DEBUG_TYPE_ERROR ? "[GL Error]" : "",
             type, severity, message);
 }
 
 void Window::render() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 void Window::run() {
@@ -114,5 +227,4 @@ void Window::run() {
         glfwPollEvents();
         glfwSwapBuffers(window);
     }
-    this->~Window();
 }
