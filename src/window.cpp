@@ -23,7 +23,8 @@ private:
                                                 const GLchar *message,
                                                 const void *userParam);
     std::vector<float> vertices;
-    GLuint VAO, VBO, vertexShader, fragmentShader, shaderProgram;
+    std::vector<uint32_t> indices;
+    GLuint VAO, VBO, EBO, vertexShader, fragmentShader, shaderProgram;
     const char *vertexShaderSource;
     const char *fragmentShaderSource;
 
@@ -38,6 +39,7 @@ public:
 
     bool createWindow();
     void setVertices(std::vector<float> vertices);
+    void setIndices(std::vector<uint32_t> indices);
     void loadShader(const char *filePath, Window::ShaderType type);
     void compileShaders();
     void render();
@@ -69,7 +71,6 @@ bool Window::createWindow() {
     window = glfwCreateWindow(width, height, windowName, NULL, NULL);
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
-        this->~Window();
         return false; // TODO: use an enum instead?
     }
 
@@ -80,7 +81,6 @@ bool Window::createWindow() {
     // Initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "Failed to initialize GLAD" << std::endl;
-        this->~Window();
         return false;
     }
 
@@ -105,11 +105,22 @@ void Window::setVertices(std::vector<float> vertices) {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
     // Copy data into buffer memory
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), this->vertices.data(), GL_STATIC_DRAW);
 
     // Set vertex attributes pointers
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
+}
+
+void Window::setIndices(std::vector<uint32_t> indices) {
+    this->indices = indices;
+
+    // Generate and bind element buffer object
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
+    // Copy data into buffer memory
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), this->indices.data(), GL_STATIC_DRAW);
 }
 
 void Window::loadShader(const char *filePath, Window::ShaderType type) {
@@ -212,7 +223,9 @@ void Window::render() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    // glDrawArrays(GL_TRIANGLES, 0, 3);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
 void Window::run() {
