@@ -24,7 +24,10 @@ private:
                                                 const void *userParam);
     std::vector<float> vertices;
     std::vector<uint32_t> indices;
-    GLuint VAO, VBO, EBO, vertexShader, fragmentShader, shaderProgram;
+    // std::vector<std::vector<float>> verticesArray;
+    // std::vector<std::vector<uint32_t>> indicesArray;
+    std::vector<uint32_t> VAOs, VBOs, EBOs, shaders;
+    uint32_t VAO, VBO, EBO, vertexShader, fragmentShader, shaderProgram;
     const char *vertexShaderSource;
     const char *fragmentShaderSource;
 
@@ -43,6 +46,7 @@ public:
     void loadShader(const char *filePath, Window::ShaderType type);
     void compileShaders();
     void render();
+    void showWireframe(bool value);
     void run();
 };
 
@@ -53,6 +57,9 @@ Window::Window(uint32_t width, uint32_t height, const char *windowName)
 Window::~Window() {
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
     glfwTerminate();
 }
 
@@ -99,10 +106,12 @@ void Window::setVertices(std::vector<float> vertices) {
     // Generate and bind vertex array object
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
+    VAOs.push_back(VAO);
 
     // Generate and bind vertex buffer object
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    VBOs.push_back(VBO);
 
     // Copy data into buffer memory
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), this->vertices.data(), GL_STATIC_DRAW);
@@ -118,6 +127,7 @@ void Window::setIndices(std::vector<uint32_t> indices) {
     // Generate and bind element buffer object
     glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    EBOs.push_back(EBO);
 
     // Copy data into buffer memory
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), this->indices.data(), GL_STATIC_DRAW);
@@ -126,7 +136,7 @@ void Window::setIndices(std::vector<uint32_t> indices) {
 void Window::loadShader(const char *filePath, Window::ShaderType type) {
     std::ostringstream sstream;
     std::ifstream shaderFile(filePath);
-    
+
     if (!shaderFile) {
         std::cerr << std::strerror(errno) << ": " << filePath << std::endl;
     }
@@ -176,6 +186,7 @@ void Window::loadShader(const char *filePath, Window::ShaderType type) {
 void Window::compileShaders() {
     // Compile shaders into program
     shaderProgram = glCreateProgram();
+    shaders.push_back(shaderProgram);
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
@@ -223,9 +234,18 @@ void Window::render() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // glDrawArrays(GL_TRIANGLES, 0, 3);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    // glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    for (size_t i = 0; i < VAOs.size(); i++) {
+        glUseProgram(shaders[i]);
+        glBindVertexArray(VAOs[i]);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOs[i]);
+        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    }
+}
+
+void Window::showWireframe(bool value) {
+    glPolygonMode(GL_FRONT_AND_BACK, value ? GL_LINE : GL_FILL);
 }
 
 void Window::run() {
