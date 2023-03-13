@@ -1,5 +1,5 @@
-#include <GLFW/glfw3.h>
 #include <glad/glad.h>
+#include <GLFW/glfw3.h>
 #include <iostream>
 
 class Window {
@@ -10,6 +10,13 @@ private:
 
     static void framebufferSizeCallback(GLFWwindow *window, int width, int height);
     static void processInput(GLFWwindow *window);
+    static void GLAPIENTRY debugMessageCallback(GLenum source,
+                                                GLenum type,
+                                                GLuint id,
+                                                GLenum severity,
+                                                GLsizei length,
+                                                const GLchar *message,
+                                                const void *userParam);
 
 public:
     Window(uint32_t width, uint32_t height, const char *windowName);
@@ -57,6 +64,13 @@ bool Window::createWindow() {
         this->~Window();
         return false;
     }
+
+#ifdef DEBUG
+    std::cout << "[DEBUG MODE] OpenGL version: " << glGetString(GL_VERSION) << std::endl;
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(Window::debugMessageCallback, 0);
+#endif
+
     return true;
 }
 
@@ -68,6 +82,19 @@ void Window::processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
+}
+
+void GLAPIENTRY Window::debugMessageCallback(GLenum source,
+                                             GLenum type,
+                                             GLuint id,
+                                             GLenum severity,
+                                             GLsizei length,
+                                             const GLchar *message,
+                                             const void *userParam) {
+
+    fprintf(stderr, "GL callback: %s type: 0x%x, severity: 0x%x, message: %s\n",
+            type == GL_DEBUG_TYPE_ERROR ? "[GL error]" : "",
+            type, severity, message);
 }
 
 void Window::render() {

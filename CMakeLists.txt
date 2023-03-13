@@ -10,6 +10,10 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wall)
 endif()
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_definitions(DEBUG=1)
+endif()
+
 add_executable(graphics-engine src/main.cpp src/glad.c)
 
 target_include_directories(graphics-engine PUBLIC include)
