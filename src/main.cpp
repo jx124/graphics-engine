@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 
-#include "window.cpp"
+#include "window.h"
 
 int main() {
     Window window = Window(800, 600, "Graphics Engine");

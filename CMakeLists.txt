@@ -14,7 +14,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_definitions(DEBUG=1)
 endif()
 
-add_executable(graphics-engine src/main.cpp src/glad.c)
+file(GLOB source_files CONFIGURE_DEPENDS "src/*.cpp" "src/glad.c")
 
-target_include_directories(graphics-engine PUBLIC include)
+add_executable(graphics-engine ${source_files})
+
+target_include_directories(graphics-engine PUBLIC "include/")
 target_link_libraries(graphics-engine PUBLIC dl glfw)
