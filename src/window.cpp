@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <cstring>
+#include <cmath>
 
 class Window {
 private:
@@ -42,6 +43,12 @@ public:
 
     bool createWindow();
     void setVertices(std::vector<float> vertices);
+    void addVertexAttribute(GLuint index,
+                            GLint size,
+                            GLenum type,
+                            GLboolean normalized,
+                            GLsizei stride,
+                            size_t offset);
     void setIndices(std::vector<uint32_t> indices);
     void loadShader(const char *filePath, Window::ShaderType type);
     void compileShaders();
@@ -117,8 +124,13 @@ void Window::setVertices(std::vector<float> vertices) {
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), this->vertices.data(), GL_STATIC_DRAW);
 
     // Set vertex attributes pointers
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
+    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+    // glEnableVertexAttribArray(0);
+}
+
+void Window::addVertexAttribute(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, size_t offset) {
+    glVertexAttribPointer(index, size, type, normalized, stride, (GLvoid *)offset);
+    glEnableVertexAttribArray(index);
 }
 
 void Window::setIndices(std::vector<uint32_t> indices) {
@@ -202,9 +214,6 @@ void Window::compileShaders() {
                   << infoLog << std::endl;
         return;
     }
-
-    glUseProgram(shaderProgram);
-    glBindVertexArray(VAO);
 }
 
 void Window::framebufferSizeCallback(GLFWwindow *window, int width, int height) {
@@ -226,7 +235,7 @@ void GLAPIENTRY Window::debugMessageCallback(GLenum source,
                                              const void *userParam) {
 
     fprintf(stderr, "%s type: 0x%x, severity: 0x%x, message: %s\n",
-            type == GL_DEBUG_TYPE_ERROR ? "[GL Error]" : "",
+            type == GL_DEBUG_TYPE_ERROR ? "[GL Error]" : "[GL Other]",
             type, severity, message);
 }
 
@@ -234,8 +243,13 @@ void Window::render() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    // glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    // float time = glfwGetTime();
+    // float greenValue = (sin(time * 5.0f) / 2.0f) + 0.5f;
+    // int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
+    // // We have to use the program to update the uniform
+    // glUseProgram(shaderProgram);
+    // glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
     for (size_t i = 0; i < VAOs.size(); i++) {
         glUseProgram(shaders[i]);
         glBindVertexArray(VAOs[i]);
