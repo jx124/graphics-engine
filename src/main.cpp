@@ -43,15 +43,18 @@ int main() {
     window.addVertexAttribute(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0);
     window.addVertexAttribute(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 3 * sizeof(float));
     window.setIndices(indices1);
-    window.loadShader("res/fragment.glsl", Window::ShaderType::Fragment);
-    window.loadShader("res/vertex.glsl", Window::ShaderType::Vertex);
-    window.compileShaders();
+    // window.loadShader("res/fragment.glsl", Window::ShaderType::Fragment);
+    // window.loadShader("res/vertex.glsl", Window::ShaderType::Vertex);
+    // window.compileShaders();
+    window.createShaderProgram("res/vertex.glsl", "res/fragment.glsl");
 
-    // window.setVertices(vertices2);
-    // window.setIndices(indices2);
+    window.setVertices(vertices2);
+    window.addVertexAttribute(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+    window.setIndices(indices2);
     // window.loadShader("res/fragmentRed.glsl", Window::ShaderType::Fragment);
     // window.loadShader("res/vertex.glsl", Window::ShaderType::Vertex);
     // window.compileShaders();
+    window.createShaderProgram("res/vertex.glsl", "res/fragmentRed.glsl");
 
     window.run();
 }

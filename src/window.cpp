@@ -84,6 +84,82 @@ void Window::setIndices(std::vector<uint32_t> indices) {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), this->indices.data(), GL_STATIC_DRAW);
 }
 
+void Window::createShaderProgram(const char *vertexPath, const char *fragmentPath) {
+    // Open shader files
+    std::ostringstream vStream, fStream;
+    std::ifstream vFile(vertexPath);
+    std::ifstream fFile(fragmentPath);
+
+    if (!vFile) {
+        std::cerr << std::strerror(errno) << ": " << vertexPath << std::endl;
+    }
+
+    if (!fFile) {
+        std::cerr << std::strerror(errno) << ": " << fragmentPath << std::endl;
+    }
+
+    // Convert file contents to strings
+    vStream << vFile.rdbuf();
+    fStream << fFile.rdbuf();
+
+    const std::string vStr(vStream.str());
+    const std::string fStr(fStream.str());
+
+    int success;
+    char infoLog[512];
+
+    vertexShaderSource = vStr.c_str();
+    fragmentShaderSource = fStr.c_str();
+
+    // Compile vertex shader
+    this->vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
+
+    // Log any errors
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cerr << "[GL Error] Vertex shader compilation failed\n    "
+                  << infoLog << std::endl;
+        return;
+    }
+
+    // Compile fragment shader
+    this->fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+
+    // Log any errors
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        std::cerr << "[GL Error] Fragment shader compilation failed\n    "
+                  << infoLog << std::endl;
+        return;
+    }
+
+    // Compile shaders into program
+    shaderProgram = glCreateProgram();
+    shaders.push_back(shaderProgram);
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    // Log any errors
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cerr << "[GL Error] Shader program linking failed\n    "
+                  << infoLog << std::endl;
+        return;
+    }
+
+    // TODO: Optimize this -- do we need to delete every time?
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+}
+
 void Window::loadShader(const char *filePath, Window::ShaderType type) {
     std::ostringstream sstream;
     std::ifstream shaderFile(filePath);

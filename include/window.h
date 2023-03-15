@@ -51,6 +51,7 @@ public:
                             GLsizei stride,
                             size_t offset);
     void setIndices(std::vector<uint32_t> indices);
+    void createShaderProgram(const char *vertexPath, const char* fragmentPath);
     void loadShader(const char *filePath, Window::ShaderType type);
     void compileShaders();
     void render();
