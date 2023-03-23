@@ -8,8 +8,11 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <memory>
 #include <cstring>
 #include <cmath>
+
+#include "renderer.h"
 
 class Window {
 private:
@@ -32,6 +35,8 @@ private:
     uint32_t VAO, VBO, EBO, vertexShader, fragmentShader, shaderProgram;
     const char *vertexShaderSource;
     const char *fragmentShaderSource;
+
+    std::unique_ptr<Renderer> renderer;
 
 public:
     Window(uint32_t width, uint32_t height, const char *windowName);

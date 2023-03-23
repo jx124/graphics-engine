@@ -1,18 +1,20 @@
 #include "window.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+// #define STB_IMAGE_IMPLEMENTATION
+// #include "stb_image.h"
 
 Window::Window(uint32_t width, uint32_t height, const char *windowName)
     : width(width), height(height), windowName(windowName) {
+    
+    this->renderer = std::make_unique<Renderer>();
 }
 
 Window::~Window() {
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
+    // glDeleteShader(vertexShader);
+    // glDeleteShader(fragmentShader);
+    // glDeleteVertexArrays(1, &VAO);
+    // glDeleteBuffers(1, &VBO);
+    // glDeleteBuffers(1, &EBO);
     glfwTerminate();
 }
 
@@ -52,7 +54,7 @@ bool Window::createWindow() {
 
     return true;
 }
-
+/*
 void Window::setVertices(std::vector<float> vertices) {
     this->vertices = vertices;
 
@@ -259,6 +261,7 @@ void Window::compileShaders() {
         return;
     }
 }
+*/
 
 void Window::framebufferSizeCallback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -302,12 +305,14 @@ void Window::showWireframe(bool value) {
 }
 
 void Window::run() {
+    this->renderer->renderInit();
+
     while (!glfwWindowShouldClose(window)) {
         // Process key inputs
         processInput(window);
 
         // Run render commands
-        render();
+        this->renderer->renderLoop();
 
         // Check for events and swap buffers;
         glfwPollEvents();
