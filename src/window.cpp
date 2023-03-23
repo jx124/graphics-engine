@@ -1,5 +1,8 @@
 #include "window.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 Window::Window(uint32_t width, uint32_t height, const char *windowName)
     : width(width), height(height), windowName(windowName) {
 }
@@ -210,6 +213,32 @@ void Window::loadShader(const char *filePath, Window::ShaderType type) {
     }
 }
 
+uint32_t Window::loadTexture(const char *filePath, GLenum textureUnit, GLint format) {
+    stbi_set_flip_vertically_on_load(true);
+
+    int width, height, nChannels;
+    unsigned char *data = stbi_load(filePath, &width, &height, &nChannels, 0);
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    if (data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    } else {
+        std::cerr << "[GL Error] Failed to load texture" << std::endl;
+        return 0;
+    }
+    stbi_image_free(data);
+
+    return texture;
+}
+
 void Window::compileShaders() {
     // Compile shaders into program
     shaderProgram = glCreateProgram();
@@ -258,15 +287,10 @@ void Window::render() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // float time = glfwGetTime();
-    // float greenValue = (sin(time * 5.0f) / 2.0f) + 0.5f;
-    // int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
-    // // We have to use the program to update the uniform
-    // glUseProgram(shaderProgram);
-    // glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
-
     for (size_t i = 0; i < VAOs.size(); i++) {
         glUseProgram(shaders[i]);
+        glUniform1i(glGetUniformLocation(shaders[i], "texture1"), 0);
+        glUniform1i(glGetUniformLocation(shaders[i], "texture2"), 1);
         glBindVertexArray(VAOs[i]);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOs[i]);
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);

@@ -53,6 +53,7 @@ public:
     void setIndices(std::vector<uint32_t> indices);
     void createShaderProgram(const char *vertexPath, const char* fragmentPath);
     void loadShader(const char *filePath, Window::ShaderType type);
+    uint32_t loadTexture(const char *filePath, GLenum textureUnit, GLint format);
     void compileShaders();
     void render();
     void showWireframe(bool value);
