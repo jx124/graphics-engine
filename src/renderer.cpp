@@ -204,7 +204,7 @@ void Renderer::renderInit() {
     glUniform1i(glGetUniformLocation(shaderPrograms[0], "texture2"), 1);
 }
 
-void Renderer::renderLoop() {
+void Renderer::renderLoop(float time) {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glActiveTexture(GL_TEXTURE0);
@@ -215,6 +215,13 @@ void Renderer::renderLoop() {
     glUseProgram(shaderPrograms[0]);
 
     glUniform1f(glGetUniformLocation(shaderPrograms[0], "mixValue"), mixValue);
+
+    glm::mat4 trans = glm::mat4(1.0f);
+    trans = glm::rotate(trans, time, glm::vec3(0.0f, 0.0f, 1.0f));
+    trans = glm::scale(trans, (glm::sin(2.0f * time) + 2.0f) * glm::vec3(0.3f));
+
+    glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "transform"),
+                       1, GL_FALSE, glm::value_ptr(trans));
 
     glBindVertexArray(VAOs[0]);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOs[0]);

@@ -1,7 +1,10 @@
 #pragma once
 
 #include <glad/glad.h>
-// #include <GLFW/glfw3.h>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <iostream>
 #include <sstream>
@@ -27,7 +30,7 @@ public:
     size_t createShaderProgram(const char *vertexPath, const char *fragmentPath);
     size_t loadTexture2D(const char *filePath, GLint format);
     void renderInit();
-    void renderLoop();
+    void renderLoop(float time);
     // add void renderCleanup??
     void showWireframe(bool value);
 };

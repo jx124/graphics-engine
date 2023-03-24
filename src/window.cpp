@@ -98,7 +98,7 @@ void Window::run() {
         processInput(window);
 
         // Run render commands
-        this->renderer->renderLoop();
+        this->renderer->renderLoop(static_cast<float>(glfwGetTime()));
 
         // Check for events and swap buffers;
         glfwPollEvents();
