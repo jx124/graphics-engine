@@ -3,6 +3,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+extern float mixValue;
+
 size_t Renderer::setVertices(std::vector<float> vertices) {
     GLuint VAO, VBO;
 
@@ -211,6 +213,9 @@ void Renderer::renderLoop() {
     glBindTexture(GL_TEXTURE_2D, textures[1]);
 
     glUseProgram(shaderPrograms[0]);
+
+    glUniform1f(glGetUniformLocation(shaderPrograms[0], "mixValue"), mixValue);
+
     glBindVertexArray(VAOs[0]);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOs[0]);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

@@ -12,6 +12,4 @@ int main() {
         return 1;
     }
     window.run();
-    int i = 23;
-    i <<= 32;
 }
