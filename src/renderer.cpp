@@ -200,12 +200,9 @@ void Renderer::renderInit() {
     loadTexture2D("res/awesomeface.png", GL_RGBA);
 
     glUseProgram(shaderPrograms[0]);
+
     glUniform1i(glGetUniformLocation(shaderPrograms[0], "texture1"), 0);
     glUniform1i(glGetUniformLocation(shaderPrograms[0], "texture2"), 1);
-}
-
-void Renderer::renderLoop(float time) {
-    glClear(GL_COLOR_BUFFER_BIT);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textures[0]);
@@ -213,15 +210,28 @@ void Renderer::renderLoop(float time) {
     glBindTexture(GL_TEXTURE_2D, textures[1]);
 
     glUseProgram(shaderPrograms[0]);
+}
+
+void Renderer::renderLoop(float time) {
+    glClear(GL_COLOR_BUFFER_BIT);
 
     glUniform1f(glGetUniformLocation(shaderPrograms[0], "mixValue"), mixValue);
 
-    glm::mat4 trans = glm::mat4(1.0f);
-    trans = glm::rotate(trans, time, glm::vec3(0.0f, 0.0f, 1.0f));
-    trans = glm::scale(trans, (glm::sin(2.0f * time) + 2.0f) * glm::vec3(0.3f));
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
-    glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "transform"),
-                       1, GL_FALSE, glm::value_ptr(trans));
+    glm::mat4 view = glm::mat4(1.0f);
+    // note that we translate in the opposite direction of where we want to move
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+
+    glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"),
+                       1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "view"),
+                       1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "projection"),
+                       1, GL_FALSE, glm::value_ptr(projection));
 
     glBindVertexArray(VAOs[0]);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOs[0]);
