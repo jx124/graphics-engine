@@ -33,4 +33,5 @@ public:
     void renderLoop(float time);
     // add void renderCleanup??
     void showWireframe(bool value);
+    void setViewMatrix(const glm::mat4& view);
 };

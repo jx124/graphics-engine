@@ -257,36 +257,50 @@ void Renderer::renderInit() {
     glBindTexture(GL_TEXTURE_2D, textures[1]);
 
     glUseProgram(shaderPrograms[0]);
+
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+
+    glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "projection"),
+                       1, GL_FALSE, glm::value_ptr(projection));
 }
+
+glm::vec3 cubePositions[] = {
+    glm::vec3( 0.0f,  0.0f,  0.0f), 
+    glm::vec3( 2.0f,  5.0f, -15.0f), 
+    glm::vec3(-1.5f, -2.2f, -2.5f),  
+    glm::vec3(-3.8f, -2.0f, -12.3f),  
+    glm::vec3( 2.4f, -0.4f, -3.5f),  
+    glm::vec3(-1.7f,  3.0f, -7.5f),  
+    glm::vec3( 1.3f, -2.0f, -2.5f),  
+    glm::vec3( 1.5f,  2.0f, -2.5f), 
+    glm::vec3( 1.5f,  0.2f, -1.5f), 
+    glm::vec3(-1.3f,  1.0f, -1.5f)  
+};
 
 void Renderer::renderLoop(float time) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUniform1f(glGetUniformLocation(shaderPrograms[0], "mixValue"), mixValue);
 
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    model = glm::rotate(model, time * glm::radians(50.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
-    glm::mat4 view = glm::mat4(1.0f);
-    // note that we translate in the opposite direction of where we want to move
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
-
-    glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"),
-                       1, GL_FALSE, glm::value_ptr(model));
-    glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "view"),
-                       1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "projection"),
-                       1, GL_FALSE, glm::value_ptr(projection));
-
     glBindVertexArray(VAOs[0]);
     // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBOs[0]);
     // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    for (size_t i = 0; i < 10; i++) {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, cubePositions[i]);
+        model = glm::rotate(model, glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
+        model = glm::rotate(model, time * glm::radians(50.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+        glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"),
+                           1, GL_FALSE, glm::value_ptr(model));
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
 }
 
 void Renderer::showWireframe(bool value) {
     glPolygonMode(GL_FRONT_AND_BACK, value ? GL_LINE : GL_FILL);
+}
+
+void Renderer::setViewMatrix(const glm::mat4& view) {
+    glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "view"),
+                       1, GL_FALSE, glm::value_ptr(view));
 }
