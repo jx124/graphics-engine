@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <exception>
 
 #include "renderer.h"
 
@@ -35,7 +36,7 @@ public:
     Window(uint32_t width, uint32_t height, const char *windowName);
     ~Window();
 
-    bool createWindow();
+    void createWindow();
     void showWireframe(bool value);
     void run();
 };

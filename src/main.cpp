@@ -7,8 +7,10 @@
 
 int main() {
     Window window = Window(800, 600, "Graphics Engine");
-    bool success = window.createWindow();
-    if (!success) {
+    try {
+        window.createWindow();
+    } catch(const std::exception& e) {
+        std::cerr << e.what() << std::endl;
         return 1;
     }
     window.run();

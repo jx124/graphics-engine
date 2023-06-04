@@ -16,7 +16,7 @@ Window::~Window() {
     glfwTerminate();
 }
 
-bool Window::createWindow() {
+void Window::createWindow() {
     // Initialize glfw
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -30,8 +30,7 @@ bool Window::createWindow() {
     // Create glfw window
     window = glfwCreateWindow(width, height, windowName, NULL, NULL);
     if (window == NULL) {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        return false; // TODO: use an enum instead?
+        throw std::runtime_error("Failed to create GLFW window");
     }
 
     // Register resize callback and set current context
@@ -40,8 +39,7 @@ bool Window::createWindow() {
 
     // Initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return false;
+        throw std::runtime_error("Failed to initialize GLAD");
     }
 
 #ifdef DEBUG
@@ -52,8 +50,6 @@ bool Window::createWindow() {
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, Window::mouseCallback);
-
-    return true;
 }
 
 void Window::framebufferSizeCallback(GLFWwindow *window, int width, int height) {
