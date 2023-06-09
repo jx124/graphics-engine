@@ -1,10 +1,15 @@
 #pragma once
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_opengl3.h"
 #include <glad/glad.h>
 
 #include <glm/glm.hpp>
+// #include <glm/ext.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 #include <iostream>
 #include <sstream>
@@ -31,7 +36,8 @@ public:
     size_t loadTexture2D(const char *filePath, GLint format);
     void renderInit();
     void renderLoop(float time);
+    void renderImGui(ImGuiIO &io);
     // add void renderCleanup??
     void showWireframe(bool value);
-    void setViewMatrix(const glm::mat4& view);
+    void setViewMatrix(const glm::mat4 &view);
 };

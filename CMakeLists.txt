@@ -20,9 +20,9 @@ else()
     endif()
 endif()
 
-file(GLOB source_files CONFIGURE_DEPENDS "src/*.cpp" "src/glad.c")
+file(GLOB source_files CONFIGURE_DEPENDS "src/*.cpp" "src/glad.c" "src/imgui/*.cpp")
 
 add_executable(graphics-engine ${source_files})
 
-target_include_directories(graphics-engine PUBLIC "include/")
+target_include_directories(graphics-engine PUBLIC "include/" "include/imgui")
 target_link_libraries(graphics-engine PUBLIC dl glfw)

@@ -1,5 +1,8 @@
 #pragma once
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_opengl3.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -16,6 +19,7 @@ private:
     uint32_t width, height;
     const char *windowName;
     GLFWwindow *window;
+    std::unique_ptr<ImGuiIO> io;
 
     static void framebufferSizeCallback(GLFWwindow *window, int width, int height);
     static void mouseCallback(GLFWwindow *window, double xPos, double yPos);

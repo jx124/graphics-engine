@@ -13,6 +13,11 @@ Window::Window(uint32_t width, uint32_t height, const char *windowName)
 }
 
 Window::~Window() {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    glfwDestroyWindow(window);
     glfwTerminate();
 }
 
@@ -48,8 +53,24 @@ void Window::createWindow() {
     glDebugMessageCallback(Window::debugMessageCallback, 0);
 #endif
 
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // TODO: handle mouse events only on mouse hold
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     glfwSetCursorPosCallback(window, Window::mouseCallback);
+
+    // Initialize ImGui
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    this->io = std::make_unique<ImGuiIO>(ImGui::GetIO());
+    io->AddMouseButtonEvent(GLFW_MOUSE_BUTTON_LEFT, false);
+    io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+    io->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330 core");
 }
 
 void Window::framebufferSizeCallback(GLFWwindow *window, int width, int height) {
@@ -63,11 +84,16 @@ static float pitch, yaw;
 static glm::vec3 staticCameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 
 void Window::mouseCallback(GLFWwindow *window, double xPos, double yPos) {
+    ImGuiIO &io = ImGui::GetIO();
+
+    if (io.WantCaptureMouse || glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) != GLFW_PRESS) {
+        firstMouse = true;
+        return;
+    }
+
     if (firstMouse) {
         lastX = xPos;
         lastY = yPos;
-        pitch = 0.01f;
-        yaw = 0.01f;
         firstMouse = false;
     }
 
@@ -161,6 +187,7 @@ void Window::run() {
         // Run render commands
         this->renderer->setViewMatrix(this->view);
         this->renderer->renderLoop(static_cast<float>(glfwGetTime()));
+        this->renderer->renderImGui(*io);
 
         // Check for events and swap buffers;
         glfwPollEvents();
