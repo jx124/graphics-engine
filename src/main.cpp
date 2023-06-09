@@ -6,12 +6,12 @@
 #include "window.h"
 
 int main() {
-    Window window = Window(800, 600, "Graphics Engine");
     try {
+        Window window = Window(800, 600, "Graphics Engine");
         window.createWindow();
-    } catch(const std::exception& e) {
+        window.run();
+    } catch (const std::exception &e) {
         std::cerr << e.what() << std::endl;
         return 1;
     }
-    window.run();
 }

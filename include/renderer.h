@@ -18,11 +18,14 @@
 #include <vector>
 #include <cstring>
 #include <cmath>
+#include <memory>
+
+#include "shader.h"
 
 class Renderer {
 private:
     std::vector<GLuint> VAOs, VBOs, EBOs, shaderPrograms, textures;
-
+    std::unique_ptr<Shader> boxShader, lightShader;
 public:
     size_t setVertices(std::vector<float> vertices);
     void addVertexAttribute(GLuint index,

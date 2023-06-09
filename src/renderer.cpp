@@ -1,4 +1,5 @@
 #include "renderer.h"
+#include "shader.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -240,39 +241,33 @@ void Renderer::renderInit() {
     addVertexAttribute(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 3 * sizeof(float));
     addVertexAttribute(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 6 * sizeof(float));
 
-    // setIndices(indices1);
-
-    createShaderProgram("res/vertexLight.glsl", "res/fragmentLight.glsl");
+    boxShader = std::make_unique<Shader>("res/vertexLight.glsl", "res/fragmentLight.glsl");
+    lightShader = std::make_unique<Shader>("res/vertexLight.glsl", "res/fragmentLightSource.glsl");
 
     loadTexture2D("res/container.jpg", GL_RGB);
     loadTexture2D("res/awesomeface.png", GL_RGBA);
 
-    glUseProgram(shaderPrograms[0]);
-
-    glUniform1i(glGetUniformLocation(shaderPrograms[0], "texture1"), 0);
-    glUniform1i(glGetUniformLocation(shaderPrograms[0], "texture2"), 1);
+    boxShader->bind();
+    boxShader->setInt("texture1", 0);
+    boxShader->setInt("texture2", 1);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textures[0]);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, textures[1]);
 
-    glUseProgram(shaderPrograms[0]);
+    boxShader->bind();
 
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+    boxShader->setMat4("projection", projection);
+    boxShader->setVec3("lightPos", glm::vec3(1.2f, 1.0f, 2.0f));
 
-    glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "projection"),
-                       1, GL_FALSE, glm::value_ptr(projection));
-    glUniform3f(glGetUniformLocation(shaderPrograms[0], "lightPos"), 1.2f, 1.0f, 2.0f);
-
-    // // light cube
+    // light cube
     setVertices(vertices);
     addVertexAttribute(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0);
-    createShaderProgram("res/vertexLight.glsl", "res/fragmentLightSource.glsl");
-    glUseProgram(shaderPrograms[1]);
 
-    glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[1], "projection"),
-                       1, GL_FALSE, glm::value_ptr(projection));
+    lightShader->bind();
+    lightShader->setMat4("projection", projection);
 }
 
 glm::vec3 cubePositions[] = {
@@ -290,14 +285,10 @@ glm::vec3 cubePositions[] = {
 void Renderer::renderLoop(float time) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glUseProgram(shaderPrograms[0]);
-
-    glUniform1i(glGetUniformLocation(shaderPrograms[0], "texture1"), 0);
-    glUniform1i(glGetUniformLocation(shaderPrograms[0], "texture2"), 1);
-
-    glUniform1f(glGetUniformLocation(shaderPrograms[0], "mixValue"), mixValue);
-    glUniform3f(glGetUniformLocation(shaderPrograms[0], "objectColor"), 1.0f, 0.5f, 0.31f);
-    glUniform3f(glGetUniformLocation(shaderPrograms[0], "lightColor"), 1.0f, 1.0f, 1.0f);
+    boxShader->bind();
+    boxShader->setFloat("mixValue", mixValue);
+    boxShader->setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
+    boxShader->setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
 
     glBindVertexArray(VAOs[0]);
     for (size_t i = 0; i < 10; i++) {
@@ -305,19 +296,18 @@ void Renderer::renderLoop(float time) {
         model = glm::translate(model, cubePositions[i]);
         model = glm::rotate(model, glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
         model = glm::rotate(model, time * glm::radians(50.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "model"),
-                           1, GL_FALSE, glm::value_ptr(model));
+        boxShader->setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
 
     // light cube
-    glUseProgram(shaderPrograms[1]);
+    lightShader->bind();
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(1.2f, 1.0f, 2.0f));
     model = glm::scale(model, glm::vec3(0.2f));
-    glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[1], "model"),
-                       1, GL_FALSE, glm::value_ptr(model));
+
+    lightShader->setMat4("model", model);
     glBindVertexArray(VAOs[1]);
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
@@ -362,10 +352,8 @@ void Renderer::showWireframe(bool value) {
 }
 
 void Renderer::setViewMatrix(const glm::mat4 &view) {
-    glUseProgram(shaderPrograms[0]);
-    glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[0], "view"),
-                       1, GL_FALSE, glm::value_ptr(view));
-    glUseProgram(shaderPrograms[1]);
-    glUniformMatrix4fv(glGetUniformLocation(shaderPrograms[1], "view"),
-                       1, GL_FALSE, glm::value_ptr(view));
+    boxShader->bind();
+    boxShader->setMat4("view", view);
+    lightShader->bind();
+    lightShader->setMat4("view", view);
 }
