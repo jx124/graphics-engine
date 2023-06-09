@@ -6,7 +6,6 @@
 #include <glad/glad.h>
 
 #include <glm/glm.hpp>
-// #include <glm/ext.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
@@ -19,13 +18,14 @@
 #include <cstring>
 #include <cmath>
 #include <memory>
+#include <unordered_map>
 
 #include "shader.h"
 
 class Renderer {
 private:
-    std::vector<GLuint> VAOs, VBOs, EBOs, shaderPrograms, textures;
-    std::unique_ptr<Shader> boxShader, lightShader;
+    std::vector<GLuint> VAOs, VBOs, EBOs, textures;
+    std::unordered_map<std::string, std::unique_ptr<Shader>> shaders;
 public:
     size_t setVertices(std::vector<float> vertices);
     void addVertexAttribute(GLuint index,
@@ -35,7 +35,6 @@ public:
                             GLsizei stride,
                             size_t offset);
     size_t setIndices(std::vector<uint32_t> indices);
-    size_t createShaderProgram(const char *vertexPath, const char *fragmentPath);
     size_t loadTexture2D(const char *filePath, GLint format);
     void renderInit();
     void renderLoop(float time);
@@ -43,4 +42,6 @@ public:
     // add void renderCleanup??
     void showWireframe(bool value);
     void setViewMatrix(const glm::mat4 &view);
+    void addShader(const std::string &name, const char *vertexPath, const char *fragmentPath);
+    const Shader& getShader(const std::string &name);
 };

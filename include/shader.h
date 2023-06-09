@@ -13,14 +13,15 @@
 
 class Shader {
 public:
-    GLuint ID;
-    
     Shader(const char *vertexPath, const char *fragmentPath);
-    void bind();
-    void unbind();
+    void bind() const;
+    void unbind() const;
     void setBool(const std::string &name, bool value) const;
     void setInt(const std::string &name, GLint value) const;
     void setFloat(const std::string &name, GLfloat value) const;
     void setVec3(const std::string &name, const glm::vec3 &vec) const;
     void setMat4(const std::string &name, const glm::mat4 &mat) const;
+
+private:
+    GLuint ID;
 };

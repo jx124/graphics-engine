@@ -46,85 +46,6 @@ size_t Renderer::setIndices(std::vector<uint32_t> indices) {
     return EBOs.size() - 1;
 }
 
-size_t Renderer::createShaderProgram(const char *vertexPath, const char *fragmentPath) {
-    // Open shader files
-    std::ostringstream vStream, fStream;
-    std::ifstream vFile(vertexPath);
-    std::ifstream fFile(fragmentPath);
-
-    if (!vFile) {
-        std::cerr << std::strerror(errno) << ": " << vertexPath << std::endl;
-    }
-
-    if (!fFile) {
-        std::cerr << std::strerror(errno) << ": " << fragmentPath << std::endl;
-    }
-
-    // Convert file contents to strings
-    vStream << vFile.rdbuf();
-    fStream << fFile.rdbuf();
-
-    const std::string vStr(vStream.str());
-    const std::string fStr(fStream.str());
-
-    int success;
-    char infoLog[512];
-
-    const char *vertexShaderSource = vStr.c_str();
-    const char *fragmentShaderSource = fStr.c_str();
-
-    // Compile vertex shader
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-
-    // Log any errors
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cerr << "[GL Error] Vertex shader compilation failed\n    "
-                  << infoLog << std::endl;
-        return 0;
-    }
-
-    // Compile fragment shader
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-
-    // Log any errors
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cerr << "[GL Error] Fragment shader compilation failed\n    "
-                  << infoLog << std::endl;
-        return 0;
-    }
-
-    // Compile shaders into program
-    GLuint shaderProgram = glCreateProgram();
-    shaderPrograms.push_back(shaderProgram);
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    // Log any errors
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cerr << "[GL Error] Shader program linking failed\n    "
-                  << infoLog << std::endl;
-        return 0;
-    }
-
-    // TODO: Optimize this -- do we need to delete every time?
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
-    // return index of location in shaderPrograms array.
-    return shaderPrograms.size() - 1;
-}
-
 size_t Renderer::loadTexture2D(const char *filePath, GLint format) {
     // Initialize settings and variables
     stbi_set_flip_vertically_on_load(true);
@@ -241,33 +162,33 @@ void Renderer::renderInit() {
     addVertexAttribute(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 3 * sizeof(float));
     addVertexAttribute(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 6 * sizeof(float));
 
-    boxShader = std::make_unique<Shader>("res/vertexLight.glsl", "res/fragmentLight.glsl");
-    lightShader = std::make_unique<Shader>("res/vertexLight.glsl", "res/fragmentLightSource.glsl");
+    addShader("Box", "res/vertexLight.glsl", "res/fragmentLight.glsl");
+    addShader("Light", "res/vertexLight.glsl", "res/fragmentLightSource.glsl");
 
     loadTexture2D("res/container.jpg", GL_RGB);
     loadTexture2D("res/awesomeface.png", GL_RGBA);
 
-    boxShader->bind();
-    boxShader->setInt("texture1", 0);
-    boxShader->setInt("texture2", 1);
+    getShader("Box").bind();
+    getShader("Box").setInt("texture1", 0);
+    getShader("Box").setInt("texture2", 1);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textures[0]);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, textures[1]);
 
-    boxShader->bind();
+    getShader("Box").bind();
 
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
-    boxShader->setMat4("projection", projection);
-    boxShader->setVec3("lightPos", glm::vec3(1.2f, 1.0f, 2.0f));
+    getShader("Box").setMat4("projection", projection);
+    getShader("Box").setVec3("lightPos", glm::vec3(1.2f, 1.0f, 2.0f));
 
     // light cube
     setVertices(vertices);
     addVertexAttribute(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0);
 
-    lightShader->bind();
-    lightShader->setMat4("projection", projection);
+    getShader("Light").bind();
+    getShader("Light").setMat4("projection", projection);
 }
 
 glm::vec3 cubePositions[] = {
@@ -285,10 +206,10 @@ glm::vec3 cubePositions[] = {
 void Renderer::renderLoop(float time) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    boxShader->bind();
-    boxShader->setFloat("mixValue", mixValue);
-    boxShader->setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
-    boxShader->setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+    getShader("Box").bind();
+    getShader("Box").setFloat("mixValue", mixValue);
+    getShader("Box").setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
+    getShader("Box").setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
 
     glBindVertexArray(VAOs[0]);
     for (size_t i = 0; i < 10; i++) {
@@ -296,18 +217,18 @@ void Renderer::renderLoop(float time) {
         model = glm::translate(model, cubePositions[i]);
         model = glm::rotate(model, glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
         model = glm::rotate(model, time * glm::radians(50.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        boxShader->setMat4("model", model);
+        getShader("Box").setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
 
     // light cube
-    lightShader->bind();
+    getShader("Light").bind();
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(1.2f, 1.0f, 2.0f));
     model = glm::scale(model, glm::vec3(0.2f));
 
-    lightShader->setMat4("model", model);
+    getShader("Light").setMat4("model", model);
     glBindVertexArray(VAOs[1]);
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
@@ -352,8 +273,16 @@ void Renderer::showWireframe(bool value) {
 }
 
 void Renderer::setViewMatrix(const glm::mat4 &view) {
-    boxShader->bind();
-    boxShader->setMat4("view", view);
-    lightShader->bind();
-    lightShader->setMat4("view", view);
+    getShader("Box").bind();
+    getShader("Box").setMat4("view", view);
+    getShader("Light").bind();
+    getShader("Light").setMat4("view", view);
+}
+
+void Renderer::addShader(const std::string &name, const char *vertexPath, const char *fragmentPath) {
+    shaders[name] = std::make_unique<Shader>(vertexPath, fragmentPath);
+}
+
+const Shader& Renderer::getShader(const std::string &name) {
+    return *shaders[name];
 }
