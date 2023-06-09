@@ -60,6 +60,7 @@ void Window::createWindow() {
     // Initialize ImGui
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    // TODO: might not need to save io 
     this->io = std::make_unique<ImGuiIO>(ImGui::GetIO());
     io->AddMouseButtonEvent(GLFW_MOUSE_BUTTON_LEFT, false);
     io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
