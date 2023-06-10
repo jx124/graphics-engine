@@ -214,6 +214,7 @@ void Renderer::renderLoop(float time) {
     getShader("Box").setFloat("mixValue", mixValue);
     getShader("Box").setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
     getShader("Box").setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+    getShader("Box").setVec3("viewPos", state->cameraPos);
 
     glBindVertexArray(VAOs[0]);
     for (size_t i = 0; i < 10; i++) {
