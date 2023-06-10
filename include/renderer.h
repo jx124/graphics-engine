@@ -22,11 +22,22 @@
 
 #include "shader.h"
 
+struct RendererState {
+    glm::vec3 cameraPos;
+    glm::vec3 cameraFront;
+    glm::vec3 cameraUp;
+    
+    glm::mat4 view;
+
+    float lastFrameTime;
+};
+
 class Renderer {
 private:
     std::vector<GLuint> VAOs, VBOs, EBOs, textures;
     std::unordered_map<std::string, std::unique_ptr<Shader>> shaders;
 public:
+    Renderer();
     size_t setVertices(std::vector<float> vertices);
     void addVertexAttribute(GLuint index,
                             GLint size,
@@ -36,9 +47,12 @@ public:
                             size_t offset);
     size_t setIndices(std::vector<uint32_t> indices);
     size_t loadTexture2D(const char *filePath, GLint format);
+    std::unique_ptr<RendererState> state;
+
     void renderInit();
     void renderLoop(float time);
-    void renderImGui(ImGuiIO &io);
+    void renderImGui();
+    void updateLoop(float time);
     // add void renderCleanup??
     void showWireframe(bool value);
     void setViewMatrix(const glm::mat4 &view);

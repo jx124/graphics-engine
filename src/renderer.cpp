@@ -6,6 +6,10 @@
 
 extern float mixValue;
 
+Renderer::Renderer() {
+    this->state = std::make_unique<RendererState>();
+}
+
 size_t Renderer::setVertices(std::vector<float> vertices) {
     GLuint VAO, VBO;
 
@@ -233,11 +237,12 @@ void Renderer::renderLoop(float time) {
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
-void Renderer::renderImGui(ImGuiIO &io) {
+void Renderer::renderImGui() {
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+    ImGuiIO &io = ImGui::GetIO();
 
     {
         static float f = 0.0f;
@@ -268,6 +273,12 @@ void Renderer::renderImGui(ImGuiIO &io) {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
+void Renderer::updateLoop(float time) {
+    this->setViewMatrix(this->state->view);
+    this->renderLoop(time);
+    this->renderImGui();
+}
+
 void Renderer::showWireframe(bool value) {
     glPolygonMode(GL_FRONT_AND_BACK, value ? GL_LINE : GL_FILL);
 }
@@ -283,6 +294,6 @@ void Renderer::addShader(const std::string &name, const char *vertexPath, const 
     shaders[name] = std::make_unique<Shader>(vertexPath, fragmentPath);
 }
 
-const Shader& Renderer::getShader(const std::string &name) {
+const Shader &Renderer::getShader(const std::string &name) {
     return *shaders[name];
 }

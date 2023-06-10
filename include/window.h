@@ -19,7 +19,6 @@ private:
     uint32_t width, height;
     const char *windowName;
     GLFWwindow *window;
-    std::unique_ptr<ImGuiIO> io;
 
     static void framebufferSizeCallback(GLFWwindow *window, int width, int height);
     static void mouseCallback(GLFWwindow *window, double xPos, double yPos);

@@ -6,10 +6,14 @@ Window::Window(uint32_t width, uint32_t height, const char *windowName)
     : width(width), height(height), windowName(windowName), lastFrame(0.0f) {
 
     this->renderer = std::make_unique<Renderer>();
-    this->cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-    this->cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-    this->cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-    this->view = glm::lookAt(this->cameraPos, this->cameraPos + this->cameraFront, this->cameraUp);
+    RendererState &state = *(this->renderer->state);
+
+    state.cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+    state.cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+    state.cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+    state.view = glm::lookAt(state.cameraPos, state.cameraPos + state.cameraFront, state.cameraUp);
+
+    state.lastFrameTime = 0.0f;
 }
 
 Window::~Window() {
@@ -60,11 +64,10 @@ void Window::createWindow() {
     // Initialize ImGui
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    // TODO: might not need to save io 
-    this->io = std::make_unique<ImGuiIO>(ImGui::GetIO());
-    io->AddMouseButtonEvent(GLFW_MOUSE_BUTTON_LEFT, false);
-    io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-    io->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
+    ImGuiIO &io = ImGui::GetIO();
+    io.AddMouseButtonEvent(GLFW_MOUSE_BUTTON_LEFT, false);
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -105,7 +108,7 @@ void Window::mouseCallback(GLFWwindow *window, double xPos, double yPos) {
 
     yaw += xOffset;
     pitch += yOffset;
-    
+
     if (pitch > 89.0f) {
         pitch = 89.0f;
     }
@@ -122,9 +125,11 @@ void Window::mouseCallback(GLFWwindow *window, double xPos, double yPos) {
 
 void Window::processInput(GLFWwindow *window) {
     float currentFrame = glfwGetTime();
-    float deltaTime = currentFrame - this->lastFrame;
-    this->lastFrame = currentFrame;
-    this->cameraFront = staticCameraFront;
+    RendererState &state = *(this->renderer->state);
+
+    float deltaTime = currentFrame - state.lastFrameTime;
+    state.lastFrameTime = currentFrame;
+    state.cameraFront = staticCameraFront;
 
     float cameraSpeed = 2.5f * deltaTime;
 
@@ -147,18 +152,18 @@ void Window::processInput(GLFWwindow *window) {
     }
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        this->cameraPos += cameraSpeed * this->cameraFront;
+        state.cameraPos += cameraSpeed * state.cameraFront;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        this->cameraPos -= cameraSpeed * this->cameraFront;
+        state.cameraPos -= cameraSpeed * state.cameraFront;
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        this->cameraPos -= glm::normalize(glm::cross(this->cameraFront, this->cameraUp)) * cameraSpeed;
+        state.cameraPos -= glm::normalize(glm::cross(state.cameraFront, state.cameraUp)) * cameraSpeed;
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        this->cameraPos += glm::normalize(glm::cross(this->cameraFront, this->cameraUp)) * cameraSpeed;
+        state.cameraPos += glm::normalize(glm::cross(state.cameraFront, state.cameraUp)) * cameraSpeed;
     }
-    this->view = glm::lookAt(this->cameraPos, this->cameraPos + this->cameraFront, this->cameraUp);
+    state.view = glm::lookAt(state.cameraPos, state.cameraPos + state.cameraFront, state.cameraUp);
 }
 
 void GLAPIENTRY Window::debugMessageCallback(GLenum source,
@@ -186,9 +191,7 @@ void Window::run() {
         processInput(window);
 
         // Run render commands
-        this->renderer->setViewMatrix(this->view);
-        this->renderer->renderLoop(static_cast<float>(glfwGetTime()));
-        this->renderer->renderImGui(*io);
+        this->renderer->updateLoop(static_cast<float>(glfwGetTime()));
 
         // Check for events and swap buffers;
         glfwPollEvents();
