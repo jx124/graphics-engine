@@ -66,8 +66,8 @@ void Window::createWindow() {
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     io.AddMouseButtonEvent(GLFW_MOUSE_BUTTON_LEFT, false);
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();

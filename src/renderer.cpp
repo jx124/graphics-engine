@@ -260,12 +260,13 @@ void Renderer::renderImGui() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
     ImGuiIO &io = ImGui::GetIO();
 
     {
         ImGui::Begin("Settings");
 
-        ImGui::SeparatorText("Material Properties"); 
+        ImGui::SeparatorText("Material Properties");
         ImGui::PushItemWidth(-110);
         ImGui::ColorEdit3("Ambient Color", (float *)&imGuiState->materialAmbient);
         ImGui::ColorEdit3("Diffuse Color", (float *)&imGuiState->materialDiffuse);
