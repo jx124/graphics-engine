@@ -28,9 +28,28 @@ else()
     endif()
 endif()
 
-file(GLOB_RECURSE source_files CONFIGURE_DEPENDS "src/*.cpp" "src/glad.c" "src/imgui/*.cpp")
+file(GLOB_RECURSE source_files CONFIGURE_DEPENDS 
+    "src/*.cpp"
+    "src/glad.c"
+)
+
+# Add the ImGui library
+add_library(imgui STATIC
+    "imgui/imgui.cpp"
+    "imgui/imgui_demo.cpp"
+    "imgui/imgui_draw.cpp"
+    "imgui/imgui_tables.cpp"
+    "imgui/imgui_widgets.cpp"
+    "imgui/backends/imgui_impl_glfw.cpp"
+    "imgui/backends/imgui_impl_opengl3.cpp"
+)
+
+target_include_directories(imgui PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/imgui
+    ${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends
+)
 
 add_executable(graphics-engine ${source_files})
 
-target_include_directories(graphics-engine PUBLIC "include/" "include/imgui")
-target_link_libraries(graphics-engine PUBLIC dl glfw)
+target_include_directories(graphics-engine PUBLIC "include/" imgui)
+target_link_libraries(graphics-engine PUBLIC dl glfw imgui)
