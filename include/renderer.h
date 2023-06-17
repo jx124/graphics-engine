@@ -32,10 +32,22 @@ struct RendererState {
     float lastFrameTime;
 };
 
+struct ImGuiState {
+    glm::vec3 materialAmbient;
+    glm::vec3 materialDiffuse;
+    glm::vec3 materialSpecular;
+    float materialShininess;
+
+    glm::vec3 lightAmbient;
+    glm::vec3 lightDiffuse;
+    glm::vec3 lightSpecular;
+};
+
 class Renderer {
 private:
     std::vector<GLuint> VAOs, VBOs, EBOs, textures;
     std::unordered_map<std::string, std::unique_ptr<Shader>> shaders;
+    std::unique_ptr<ImGuiState> imGuiState;
 public:
     Renderer();
     size_t setVertices(std::vector<float> vertices);

@@ -8,6 +8,7 @@ extern float mixValue;
 
 Renderer::Renderer() {
     this->state = std::make_unique<RendererState>();
+    this->imGuiState = std::make_unique<ImGuiState>();
 }
 
 size_t Renderer::setVertices(std::vector<float> vertices) {
@@ -193,6 +194,14 @@ void Renderer::renderInit() {
 
     getShader("Light").bind();
     getShader("Light").setMat4("projection", projection);
+
+    this->imGuiState->materialAmbient = glm::vec3(1.0f, 0.5f, 0.31f);
+    this->imGuiState->materialDiffuse = glm::vec3(1.0f, 0.5f, 0.31f);
+    this->imGuiState->materialSpecular = glm::vec3(0.5f, 0.5f, 0.5f);
+    this->imGuiState->materialShininess = 32.0f;
+    this->imGuiState->lightAmbient = glm::vec3(0.2f, 0.2f, 0.2f);
+    this->imGuiState->lightDiffuse = glm::vec3(0.5f, 0.5f, 0.5f);
+    this->imGuiState->lightSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
 }
 
 glm::vec3 cubePositions[] = {
@@ -210,11 +219,19 @@ glm::vec3 cubePositions[] = {
 void Renderer::renderLoop(float time) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    getShader("Box").bind();
-    getShader("Box").setFloat("mixValue", mixValue);
-    getShader("Box").setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
-    getShader("Box").setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-    getShader("Box").setVec3("viewPos", state->cameraPos);
+    const Shader &boxShader = getShader("Box");
+    const Shader &lightShader = getShader("Light");
+
+    boxShader.bind();
+    boxShader.setFloat("mixValue", mixValue);
+    boxShader.setVec3("viewPos", state->cameraPos);
+    boxShader.setVec3("material.ambient", imGuiState->materialAmbient);
+    boxShader.setVec3("material.diffuse", imGuiState->materialDiffuse);
+    boxShader.setVec3("material.specular", imGuiState->materialSpecular);
+    boxShader.setFloat("material.shininess", imGuiState->materialShininess);
+    boxShader.setVec3("light.ambient", imGuiState->lightAmbient);
+    boxShader.setVec3("light.diffuse", imGuiState->lightDiffuse); // darken diffuse light a bit
+    boxShader.setVec3("light.specular", imGuiState->lightSpecular);
 
     glBindVertexArray(VAOs[0]);
     for (size_t i = 0; i < 10; i++) {
@@ -222,18 +239,18 @@ void Renderer::renderLoop(float time) {
         model = glm::translate(model, cubePositions[i]);
         model = glm::rotate(model, glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
         model = glm::rotate(model, time * glm::radians(50.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        getShader("Box").setMat4("model", model);
+        boxShader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
 
     // light cube
-    getShader("Light").bind();
+    lightShader.bind();
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(1.2f, 1.0f, 2.0f));
     model = glm::scale(model, glm::vec3(0.2f));
 
-    getShader("Light").setMat4("model", model);
+    lightShader.setMat4("model", model);
     glBindVertexArray(VAOs[1]);
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
@@ -246,26 +263,23 @@ void Renderer::renderImGui() {
     ImGuiIO &io = ImGui::GetIO();
 
     {
-        static float f = 0.0f;
-        static int counter = 0;
-        static bool show_demo_window = true;
-        static bool show_another_window = true;
-        static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+        ImGui::Begin("Settings");
 
-        ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
+        ImGui::SeparatorText("Material Properties"); 
+        ImGui::PushItemWidth(-110);
+        ImGui::ColorEdit3("Ambient Color", (float *)&imGuiState->materialAmbient);
+        ImGui::ColorEdit3("Diffuse Color", (float *)&imGuiState->materialDiffuse);
+        ImGui::ColorEdit3("Specular Color", (float *)&imGuiState->materialSpecular);
+        ImGui::SliderFloat("Shininess", &imGuiState->materialShininess, 0.0f, 256.0f);
 
-        ImGui::Text("This is some useful text.");          // Display some text (you can use a format strings too)
-        ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
-        ImGui::Checkbox("Another Window", &show_another_window);
+        // ImGui::NewLine();
+        ImGui::SeparatorText("Light Properties");
+        ImGui::ColorEdit3("Ambient Color", (float *)&imGuiState->lightAmbient);
+        ImGui::ColorEdit3("Diffuse Color", (float *)&imGuiState->lightDiffuse);
+        ImGui::ColorEdit3("Specular Color", (float *)&imGuiState->lightSpecular);
+        ImGui::PopItemWidth();
 
-        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);             // Edit 1 float using a slider from 0.0f to 1.0f
-        ImGui::ColorEdit3("clear color", (float *)&clear_color); // Edit 3 floats representing a color
-
-        if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
-            counter++;
-        ImGui::SameLine();
-        ImGui::Text("counter = %d", counter);
-
+        // ImGui::NewLine();
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
         ImGui::End();
     }
