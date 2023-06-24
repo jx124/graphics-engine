@@ -6,9 +6,10 @@
 
 extern float mixValue;
 
-Renderer::Renderer() {
+Renderer::Renderer() : width(256), height(256) {
     this->state = std::make_unique<RendererState>();
     this->imGuiState = std::make_unique<ImGuiState>();
+    this->image = std::vector<uint8_t>(width * height * 3);
 }
 
 size_t Renderer::setVertices(std::vector<float> vertices) {
@@ -83,176 +84,67 @@ size_t Renderer::loadTexture2D(const char *filePath, GLint format) {
     return textures.size() - 1;
 }
 
-void Renderer::renderInit() {
-    glEnable(GL_DEPTH_TEST);
+void Renderer::loadImage(const std::vector<uint8_t> &image) {
+    [[unlikely]] if (imageTexture == 0) {
+        glGenTextures(1, &imageTexture);
+        glBindTexture(GL_TEXTURE_2D, imageTexture);
 
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->width, this->height, 0, GL_RGB, GL_UNSIGNED_BYTE, image.data());
 
-    // clang-format off
-    std::vector<float> vertices1 = {
-        // positions          // colors           // texture coords
-         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
-    };
+        return;
+    }
 
-    std::vector<float> vertices2 = {
-        -1.0f, -0.5f, 0.0f,  // bottom left
-         0.0f, -0.5f, 0.0f,  // bottom midddle  
-        -0.5f,  0.5f, 0.0f,  // top left
-         1.0f, -0.5f, 0.0f,  // bottom right
-         0.5f,  0.5f, 0.0f,  // top right
-    };
-
-    std::vector<uint32_t> indices1 = {
-        0, 1, 2,   // first triangle
-        2, 3, 0    // second triangle
-    };
-
-    std::vector<uint32_t> indices2 = {
-        0, 1, 2,   // first triangle
-        1, 3, 4    // second triangle
-    };
-    
-
-    std::vector<float> vertices = {
-        // vertices           // normals           // texture coords
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
-
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
-
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-
-         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
-         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
-         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
-
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
-
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
-    };
-    // clang-format on
-
-    setVertices(vertices); // add move assignment?
-    addVertexAttribute(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0);
-    addVertexAttribute(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 3 * sizeof(float));
-    addVertexAttribute(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 6 * sizeof(float));
-
-    addShader("Box", "res/vertexLight.glsl", "res/fragmentLight.glsl");
-    addShader("Light", "res/vertexLight.glsl", "res/fragmentLightSource.glsl");
-
-    loadTexture2D("res/container.jpg", GL_RGB);
-    loadTexture2D("res/awesomeface.png", GL_RGBA);
-
-    getShader("Box").bind();
-    getShader("Box").setInt("texture1", 0);
-    getShader("Box").setInt("texture2", 1);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textures[0]);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, textures[1]);
-
-    getShader("Box").bind();
-
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
-    getShader("Box").setMat4("projection", projection);
-    getShader("Box").setVec3("lightPos", glm::vec3(1.2f, 1.0f, 2.0f));
-
-    // light cube
-    setVertices(vertices);
-    addVertexAttribute(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), 0);
-
-    getShader("Light").bind();
-    getShader("Light").setMat4("projection", projection);
-
-    this->imGuiState->materialAmbient = glm::vec3(1.0f, 0.5f, 0.31f);
-    this->imGuiState->materialDiffuse = glm::vec3(1.0f, 0.5f, 0.31f);
-    this->imGuiState->materialSpecular = glm::vec3(0.5f, 0.5f, 0.5f);
-    this->imGuiState->materialShininess = 32.0f;
-    this->imGuiState->lightAmbient = glm::vec3(0.2f, 0.2f, 0.2f);
-    this->imGuiState->lightDiffuse = glm::vec3(0.5f, 0.5f, 0.5f);
-    this->imGuiState->lightSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
+    glBindTexture(GL_TEXTURE_2D, imageTexture);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, this->width, this->height, GL_RGB, GL_UNSIGNED_BYTE, image.data());
 }
 
-glm::vec3 cubePositions[] = {
-    glm::vec3(0.0f, 0.0f, 0.0f),
-    glm::vec3(2.0f, 5.0f, -15.0f),
-    glm::vec3(-1.5f, -2.2f, -2.5f),
-    glm::vec3(-3.8f, -2.0f, -12.3f),
-    glm::vec3(2.4f, -0.4f, -3.5f),
-    glm::vec3(-1.7f, 3.0f, -7.5f),
-    glm::vec3(1.3f, -2.0f, -2.5f),
-    glm::vec3(1.5f, 2.0f, -2.5f),
-    glm::vec3(1.5f, 0.2f, -1.5f),
-    glm::vec3(-1.3f, 1.0f, -1.5f)};
+void Renderer::renderInit() {
+    // clang-format off
+    std::vector<float> vertices = {
+        // vertices       // texture coords
+        -1.0f,  -1.0f,    0.0f, 0.0f,
+         1.0f,  -1.0f,    1.0f, 0.0f,
+         1.0f,   1.0f,    1.0f, 1.0f,
+        -1.0f,   1.0f,    0.0f, 1.0f,
+    }; // clang-format on
+
+    setVertices(vertices); // add move assignment?
+    addVertexAttribute(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+    addVertexAttribute(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 2 * sizeof(float));
+
+    addShader("Image", "res/vertexImage.glsl", "res/fragmentImage.glsl");
+
+    getShader("Image").bind();
+    getShader("Image").setInt("ImageTexture", 0);
+
+    loadImage(image);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, imageTexture);
+}
 
 void Renderer::renderLoop(float time) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    const Shader &boxShader = getShader("Box");
-    const Shader &lightShader = getShader("Light");
+    for (size_t j = 0; j < height; j++) {
+        for (size_t i = 0; i < width; i++) {
+            float red = float(i) / (width-1);
+            float green = float(j) / (height-1);
+            float blue = 0.4 + 0.2 * sin(time);
 
-    boxShader.bind();
-    boxShader.setFloat("mixValue", mixValue);
-    boxShader.setVec3("viewPos", state->cameraPos);
-    boxShader.setVec3("material.ambient", imGuiState->materialAmbient);
-    boxShader.setVec3("material.diffuse", imGuiState->materialDiffuse);
-    boxShader.setVec3("material.specular", imGuiState->materialSpecular);
-    boxShader.setFloat("material.shininess", imGuiState->materialShininess);
-    boxShader.setVec3("light.ambient", imGuiState->lightAmbient);
-    boxShader.setVec3("light.diffuse", imGuiState->lightDiffuse); // darken diffuse light a bit
-    boxShader.setVec3("light.specular", imGuiState->lightSpecular);
-
-    glBindVertexArray(VAOs[0]);
-    for (size_t i = 0; i < 10; i++) {
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, cubePositions[i]);
-        model = glm::rotate(model, glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
-        model = glm::rotate(model, time * glm::radians(50.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        boxShader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+            image[(i + j * width) * 3 + 0] = static_cast<uint8_t>(255.999 * red);
+            image[(i + j * width) * 3 + 1] = static_cast<uint8_t>(255.999 * green);
+            image[(i + j * width) * 3 + 2] = static_cast<uint8_t>(255.999 * blue);
+        }
     }
 
-    // light cube
-    lightShader.bind();
+    loadImage(image);
 
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(1.2f, 1.0f, 2.0f));
-    model = glm::scale(model, glm::vec3(0.2f));
-
-    lightShader.setMat4("model", model);
-    glBindVertexArray(VAOs[1]);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glBindVertexArray(VAOs[0]);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
 void Renderer::renderImGui() {
@@ -281,7 +173,7 @@ void Renderer::renderImGui() {
         ImGui::PopItemWidth();
 
         // ImGui::NewLine();
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+        ImGui::Text("Framerate: %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
         ImGui::End();
     }
 
@@ -300,10 +192,6 @@ void Renderer::showWireframe(bool value) {
 }
 
 void Renderer::setViewMatrix(const glm::mat4 &view) {
-    getShader("Box").bind();
-    getShader("Box").setMat4("view", view);
-    getShader("Light").bind();
-    getShader("Light").setMat4("view", view);
 }
 
 void Renderer::addShader(const std::string &name, const char *vertexPath, const char *fragmentPath) {
