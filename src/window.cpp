@@ -5,7 +5,7 @@ float mixValue = 0.0f;
 Window::Window(uint32_t width, uint32_t height, const char *windowName)
     : width(width), height(height), windowName(windowName), lastFrame(0.0f) {
 
-    this->renderer = std::make_unique<Renderer>();
+    this->renderer = std::make_unique<Renderer>(width, height);
     RendererState &state = *(this->renderer->state);
 
     state.cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -46,6 +46,9 @@ void Window::createWindow() {
     glfwSetFramebufferSizeCallback(window, Window::framebufferSizeCallback);
     glfwMakeContextCurrent(window);
 
+    // Set Renderer instance as window user so it can be accessed in static callbacks
+    glfwSetWindowUserPointer(window, this->renderer.get());
+
     // Initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         throw std::runtime_error("Failed to initialize GLAD");
@@ -79,6 +82,16 @@ void Window::createWindow() {
 
 void Window::framebufferSizeCallback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
+
+    Renderer *renderer = static_cast<Renderer *>(glfwGetWindowUserPointer(window));
+    size_t newWidth = static_cast<size_t>(width);
+    size_t newHeight = static_cast<size_t>(height);
+
+    if (renderer->width != newWidth || renderer->height != newHeight) {
+        renderer->width = newWidth;
+        renderer->height = newHeight;
+        renderer->toResize = true;
+    }
 }
 
 static bool firstMouse = true;

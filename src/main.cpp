@@ -7,7 +7,7 @@
 
 int main() {
     try {
-        Window window = Window(1200, 800, "Graphics Engine");
+        Window window = Window(800, 450, "Graphics Engine");
         window.createWindow();
         window.run();
     } catch (const std::exception &e) {

@@ -6,7 +6,7 @@
 
 extern float mixValue;
 
-Renderer::Renderer() : width(256), height(256) {
+Renderer::Renderer(size_t width, size_t height) : width(width), height(height) {
     this->state = std::make_unique<RendererState>();
     this->imGuiState = std::make_unique<ImGuiState>();
     this->image = std::vector<uint8_t>(width * height * 3);
@@ -99,7 +99,7 @@ void Renderer::loadImage(const std::vector<uint8_t> &image) {
     }
 
     glBindTexture(GL_TEXTURE_2D, imageTexture);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, this->width, this->height, GL_RGB, GL_UNSIGNED_BYTE, image.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->width, this->height, 0, GL_RGB, GL_UNSIGNED_BYTE, image.data());
 }
 
 void Renderer::renderInit() {
@@ -131,8 +131,8 @@ void Renderer::renderLoop(float time) {
 
     for (size_t j = 0; j < height; j++) {
         for (size_t i = 0; i < width; i++) {
-            float red = float(i) / (width-1);
-            float green = float(j) / (height-1);
+            float red = float(i) / (width - 1);
+            float green = float(j) / (height - 1);
             float blue = 0.4 + 0.2 * sin(time);
 
             image[(i + j * width) * 3 + 0] = static_cast<uint8_t>(255.999 * red);
@@ -182,7 +182,7 @@ void Renderer::renderImGui() {
 }
 
 void Renderer::updateLoop(float time) {
-    this->setViewMatrix(this->state->view);
+    this->resize();
     this->renderLoop(time);
     this->renderImGui();
 }
@@ -200,4 +200,11 @@ void Renderer::addShader(const std::string &name, const char *vertexPath, const 
 
 const Shader &Renderer::getShader(const std::string &name) {
     return *shaders[name];
+}
+
+void Renderer::resize() {
+    [[unlikely]] if (toResize) {
+        image = std::vector<uint8_t>(width * height * 3, 0);
+        toResize = false;
+    }
 }

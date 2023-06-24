@@ -51,7 +51,7 @@ private:
     std::vector<uint8_t> image;
     GLuint imageTexture = 0;
 public:
-    Renderer();
+    Renderer(size_t width, size_t height);
     size_t setVertices(std::vector<float> vertices);
     void addVertexAttribute(GLuint index,
                             GLint size,
@@ -63,6 +63,7 @@ public:
     size_t loadTexture2D(const char *filePath, GLint format);
     std::unique_ptr<RendererState> state;
     size_t width, height;
+    bool toResize = false;
 
     void renderInit();
     void renderLoop(float time);
@@ -73,4 +74,5 @@ public:
     void setViewMatrix(const glm::mat4 &view);
     void addShader(const std::string &name, const char *vertexPath, const char *fragmentPath);
     const Shader& getShader(const std::string &name);
+    void resize();
 };
