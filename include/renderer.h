@@ -65,6 +65,10 @@ public:
     size_t width, height;
     bool toResize = false;
 
+    // TODO: move into camera class
+    float vfov, aspectRatio, viewportHeight, viewportWidth, focalLength;
+    glm::vec3 origin, horizontal, vertical, lowerLeftCorner;
+
     void renderInit();
     void renderLoop(float time);
     void renderImGui();
@@ -75,4 +79,13 @@ public:
     void addShader(const std::string &name, const char *vertexPath, const char *fragmentPath);
     const Shader& getShader(const std::string &name);
     void resize();
+    void setPixelColor(size_t i, size_t j, float r, float g, float b);
+    void setPixelColor(size_t i, size_t j, const glm::vec3& color);
+};
+
+struct Ray {
+    glm::vec3 origin;
+    glm::vec3 direction;
+
+    Ray(glm::vec3 origin, glm::vec3 direction) : origin(origin), direction(direction) {}
 };

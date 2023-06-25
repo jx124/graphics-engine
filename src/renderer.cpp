@@ -10,6 +10,17 @@ Renderer::Renderer(size_t width, size_t height) : width(width), height(height) {
     this->state = std::make_unique<RendererState>();
     this->imGuiState = std::make_unique<ImGuiState>();
     this->image = std::vector<uint8_t>(width * height * 3);
+
+    vfov = 45.0f;
+    aspectRatio = 16.0f / 9.0f;
+    viewportHeight = 2.0f;
+    viewportWidth = aspectRatio * viewportHeight;
+    focalLength = 1.0f;
+
+    origin = glm::vec3(0.0f, 0.0f, 0.0f);
+    horizontal = glm::vec3(viewportWidth, 0.0f, 0.0f);
+    vertical = glm::vec3(0.0f, viewportHeight, 0.0f);
+    lowerLeftCorner = origin - horizontal / 2.0f - vertical / 2.0f - glm::vec3(0.0f, 0.0f, focalLength);
 }
 
 size_t Renderer::setVertices(std::vector<float> vertices) {
@@ -86,6 +97,7 @@ size_t Renderer::loadTexture2D(const char *filePath, GLint format) {
 
 void Renderer::loadImage(const std::vector<uint8_t> &image) {
     [[unlikely]] if (imageTexture == 0) {
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glGenTextures(1, &imageTexture);
         glBindTexture(GL_TEXTURE_2D, imageTexture);
 
@@ -126,21 +138,25 @@ void Renderer::renderInit() {
     glBindTexture(GL_TEXTURE_2D, imageTexture);
 }
 
+glm::vec3 inline rayColor(const Ray &r) {
+    glm::vec3 unitDirection = glm::normalize(r.direction);
+    float t = 0.5f * (unitDirection.y + 1.0f);
+    return (1.0f - t) * glm::vec3(1.0f) + t * glm::vec3(0.5f, 0.7f, 1.0f);
+}
+
 void Renderer::renderLoop(float time) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     for (size_t j = 0; j < height; j++) {
         for (size_t i = 0; i < width; i++) {
-            float red = float(i) / (width - 1);
-            float green = float(j) / (height - 1);
-            float blue = 0.4 + 0.2 * sin(time);
+            float u = float(i) / (width - 1);
+            float v = float(j) / (height - 1);
 
-            image[(i + j * width) * 3 + 0] = static_cast<uint8_t>(255.999 * red);
-            image[(i + j * width) * 3 + 1] = static_cast<uint8_t>(255.999 * green);
-            image[(i + j * width) * 3 + 2] = static_cast<uint8_t>(255.999 * blue);
+            Ray r(origin, lowerLeftCorner + u * horizontal + v * vertical - origin);
+            setPixelColor(i, j, rayColor(r));
+
         }
     }
-
     loadImage(image);
 
     glBindVertexArray(VAOs[0]);
@@ -207,4 +223,16 @@ void Renderer::resize() {
         image = std::vector<uint8_t>(width * height * 3, 0);
         toResize = false;
     }
+}
+
+void inline Renderer::setPixelColor(size_t i, size_t j, float r, float g, float b) {
+    image[(i + j * width) * 3 + 0] = static_cast<uint8_t>(255.999 * r);
+    image[(i + j * width) * 3 + 1] = static_cast<uint8_t>(255.999 * g);
+    image[(i + j * width) * 3 + 2] = static_cast<uint8_t>(255.999 * b);
+}
+
+void inline Renderer::setPixelColor(size_t i, size_t j, const glm::vec3 &color) {
+    image[(i + j * width) * 3 + 0] = static_cast<uint8_t>(255.999 * color.r);
+    image[(i + j * width) * 3 + 1] = static_cast<uint8_t>(255.999 * color.g);
+    image[(i + j * width) * 3 + 2] = static_cast<uint8_t>(255.999 * color.b);
 }
