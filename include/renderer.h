@@ -19,6 +19,7 @@
 #include <cmath>
 #include <memory>
 #include <unordered_map>
+#include <omp.h>
 
 #include "shader.h"
 
@@ -26,7 +27,7 @@ struct RendererState {
     glm::vec3 cameraPos;
     glm::vec3 cameraFront;
     glm::vec3 cameraUp;
-    
+
     glm::mat4 view;
 
     float lastFrameTime;
@@ -50,17 +51,14 @@ private:
     std::unique_ptr<ImGuiState> imGuiState;
     std::vector<uint8_t> image;
     GLuint imageTexture = 0;
+
 public:
     Renderer(size_t width, size_t height);
-    size_t setVertices(std::vector<float> vertices);
-    void addVertexAttribute(GLuint index,
-                            GLint size,
-                            GLenum type,
-                            GLboolean normalized,
-                            GLsizei stride,
-                            size_t offset);
-    size_t setIndices(std::vector<uint32_t> indices);
-    size_t loadTexture2D(const char *filePath, GLint format);
+    size_t setVertices(const std::vector<float> &vertices) noexcept;
+    void addVertexAttribute(GLuint index, GLint size, GLenum type, GLboolean normalized,
+                            GLsizei stride, size_t offset) const noexcept;
+    size_t setIndices(const std::vector<uint32_t>& indices) noexcept;
+    size_t loadTexture2D(std::string_view filePath, GLint format);
     std::unique_ptr<RendererState> state;
     size_t width, height;
     bool toResize = false;
@@ -69,18 +67,18 @@ public:
     float vfov, aspectRatio, viewportHeight, viewportWidth, focalLength;
     glm::vec3 origin, horizontal, vertical, lowerLeftCorner;
 
-    void renderInit();
-    void renderLoop(float time);
-    void renderImGui();
-    void updateLoop(float time);
-    void loadImage(const std::vector<uint8_t> &image);
-    void showWireframe(bool value);
+    void renderInit() noexcept;
+    void renderLoop(float time) noexcept;
+    void renderImGui() noexcept;
+    void updateLoop(float time) noexcept;
+    void loadImage(const std::vector<uint8_t> &image) noexcept;
+    void showWireframe(bool value) const noexcept;
     void setViewMatrix(const glm::mat4 &view);
-    void addShader(const std::string &name, const char *vertexPath, const char *fragmentPath);
-    const Shader& getShader(const std::string &name);
-    void resize();
-    void setPixelColor(size_t i, size_t j, float r, float g, float b);
-    void setPixelColor(size_t i, size_t j, const glm::vec3& color);
+    void addShader(const std::string &name, const char *vertexPath, const char *fragmentPath) noexcept;
+    const Shader &getShader(const std::string &name) noexcept;
+    void resize() noexcept;
+    void setPixelColor(size_t i, size_t j, float r, float g, float b) noexcept;
+    void setPixelColor(size_t i, size_t j, const glm::vec3 &color) noexcept;
 };
 
 struct Ray {

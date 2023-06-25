@@ -49,7 +49,9 @@ target_include_directories(imgui PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends
 )
 
+find_package(OpenMP REQUIRED)
+
 add_executable(graphics-engine ${source_files})
 
 target_include_directories(graphics-engine PUBLIC "include/" imgui)
-target_link_libraries(graphics-engine PUBLIC dl glfw imgui)
+target_link_libraries(graphics-engine PUBLIC dl glfw imgui OpenMP::OpenMP_CXX)

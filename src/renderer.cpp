@@ -23,7 +23,7 @@ Renderer::Renderer(size_t width, size_t height) : width(width), height(height) {
     lowerLeftCorner = origin - horizontal / 2.0f - vertical / 2.0f - glm::vec3(0.0f, 0.0f, focalLength);
 }
 
-size_t Renderer::setVertices(std::vector<float> vertices) {
+size_t Renderer::setVertices(const std::vector<float> &vertices) noexcept {
     GLuint VAO, VBO;
 
     // Generate and bind vertex array object
@@ -43,12 +43,13 @@ size_t Renderer::setVertices(std::vector<float> vertices) {
     return VAOs.size() - 1;
 }
 
-void Renderer::addVertexAttribute(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, size_t offset) {
+void Renderer::addVertexAttribute(GLuint index, GLint size, GLenum type, GLboolean normalized,
+                                  GLsizei stride, size_t offset) const noexcept {
     glVertexAttribPointer(index, size, type, normalized, stride, (GLvoid *)offset);
     glEnableVertexAttribArray(index);
 }
 
-size_t Renderer::setIndices(std::vector<uint32_t> indices) {
+size_t Renderer::setIndices(const std::vector<uint32_t> &indices) noexcept {
     GLuint EBO;
 
     // Generate and bind element buffer object
@@ -63,12 +64,12 @@ size_t Renderer::setIndices(std::vector<uint32_t> indices) {
     return EBOs.size() - 1;
 }
 
-size_t Renderer::loadTexture2D(const char *filePath, GLint format) {
+size_t Renderer::loadTexture2D(std::string_view filePath, GLint format) {
     // Initialize settings and variables
     stbi_set_flip_vertically_on_load(true);
 
     int width, height, nChannels;
-    unsigned char *data = stbi_load(filePath, &width, &height, &nChannels, 0);
+    uint8_t *data = stbi_load(filePath.data(), &width, &height, &nChannels, 0);
     GLuint texture;
 
     glGenTextures(1, &texture);
@@ -84,8 +85,7 @@ size_t Renderer::loadTexture2D(const char *filePath, GLint format) {
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
     } else {
-        std::cerr << "[GL Error] Failed to load texture" << std::endl;
-        return 0;
+        throw std::runtime_error("[GL Error] Failed to load texture");
     }
     stbi_image_free(data);
 
@@ -95,8 +95,8 @@ size_t Renderer::loadTexture2D(const char *filePath, GLint format) {
     return textures.size() - 1;
 }
 
-void Renderer::loadImage(const std::vector<uint8_t> &image) {
-    [[unlikely]] if (imageTexture == 0) {
+void Renderer::loadImage(const std::vector<uint8_t> &image) noexcept {
+    if (imageTexture == 0) {
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glGenTextures(1, &imageTexture);
         glBindTexture(GL_TEXTURE_2D, imageTexture);
@@ -114,7 +114,7 @@ void Renderer::loadImage(const std::vector<uint8_t> &image) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->width, this->height, 0, GL_RGB, GL_UNSIGNED_BYTE, image.data());
 }
 
-void Renderer::renderInit() {
+void Renderer::renderInit() noexcept {
     // clang-format off
     std::vector<float> vertices = {
         // vertices       // texture coords
@@ -124,7 +124,7 @@ void Renderer::renderInit() {
         -1.0f,   1.0f,    0.0f, 1.0f,
     }; // clang-format on
 
-    setVertices(vertices); // add move assignment?
+    setVertices(vertices);
     addVertexAttribute(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
     addVertexAttribute(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 2 * sizeof(float));
 
@@ -136,6 +136,8 @@ void Renderer::renderInit() {
     loadImage(image);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, imageTexture);
+
+    std::cout << "Number of OpenMP threads: " << omp_get_max_threads() << "\n";
 }
 
 glm::vec3 inline rayColor(const Ray &r) {
@@ -144,9 +146,10 @@ glm::vec3 inline rayColor(const Ray &r) {
     return (1.0f - t) * glm::vec3(1.0f) + t * glm::vec3(0.5f, 0.7f, 1.0f);
 }
 
-void Renderer::renderLoop(float time) {
+void Renderer::renderLoop(float time) noexcept {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    #pragma omp parallel for schedule(nonmonotonic : dynamic, 8)
     for (size_t j = 0; j < height; j++) {
         for (size_t i = 0; i < width; i++) {
             float u = float(i) / (width - 1);
@@ -154,16 +157,16 @@ void Renderer::renderLoop(float time) {
 
             Ray r(origin, lowerLeftCorner + u * horizontal + v * vertical - origin);
             setPixelColor(i, j, rayColor(r));
-
         }
     }
+
     loadImage(image);
 
     glBindVertexArray(VAOs[0]);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-void Renderer::renderImGui() {
+void Renderer::renderImGui() noexcept {
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -174,19 +177,19 @@ void Renderer::renderImGui() {
     {
         ImGui::Begin("Settings");
 
-        ImGui::SeparatorText("Material Properties");
-        ImGui::PushItemWidth(-110);
-        ImGui::ColorEdit3("Ambient Color", (float *)&imGuiState->materialAmbient);
-        ImGui::ColorEdit3("Diffuse Color", (float *)&imGuiState->materialDiffuse);
-        ImGui::ColorEdit3("Specular Color", (float *)&imGuiState->materialSpecular);
-        ImGui::SliderFloat("Shininess", &imGuiState->materialShininess, 0.0f, 256.0f);
+        // ImGui::SeparatorText("Material Properties");
+        // ImGui::PushItemWidth(-110);
+        // ImGui::ColorEdit3("Ambient Color", (float *)&imGuiState->materialAmbient);
+        // ImGui::ColorEdit3("Diffuse Color", (float *)&imGuiState->materialDiffuse);
+        // ImGui::ColorEdit3("Specular Color", (float *)&imGuiState->materialSpecular);
+        // ImGui::SliderFloat("Shininess", &imGuiState->materialShininess, 0.0f, 256.0f);
 
         // ImGui::NewLine();
-        ImGui::SeparatorText("Light Properties");
-        ImGui::ColorEdit3("Ambient Color", (float *)&imGuiState->lightAmbient);
-        ImGui::ColorEdit3("Diffuse Color", (float *)&imGuiState->lightDiffuse);
-        ImGui::ColorEdit3("Specular Color", (float *)&imGuiState->lightSpecular);
-        ImGui::PopItemWidth();
+        // ImGui::SeparatorText("Light Properties");
+        // ImGui::ColorEdit3("Ambient Color", (float *)&imGuiState->lightAmbient);
+        // ImGui::ColorEdit3("Diffuse Color", (float *)&imGuiState->lightDiffuse);
+        // ImGui::ColorEdit3("Specular Color", (float *)&imGuiState->lightSpecular);
+        // ImGui::PopItemWidth();
 
         // ImGui::NewLine();
         ImGui::Text("Framerate: %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
@@ -197,41 +200,41 @@ void Renderer::renderImGui() {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void Renderer::updateLoop(float time) {
+void Renderer::updateLoop(float time) noexcept {
     this->resize();
     this->renderLoop(time);
     this->renderImGui();
 }
 
-void Renderer::showWireframe(bool value) {
+void Renderer::showWireframe(bool value) const noexcept {
     glPolygonMode(GL_FRONT_AND_BACK, value ? GL_LINE : GL_FILL);
 }
 
 void Renderer::setViewMatrix(const glm::mat4 &view) {
 }
 
-void Renderer::addShader(const std::string &name, const char *vertexPath, const char *fragmentPath) {
+void Renderer::addShader(const std::string &name, const char *vertexPath, const char *fragmentPath) noexcept {
     shaders[name] = std::make_unique<Shader>(vertexPath, fragmentPath);
 }
 
-const Shader &Renderer::getShader(const std::string &name) {
+const Shader &Renderer::getShader(const std::string &name) noexcept {
     return *shaders[name];
 }
 
-void Renderer::resize() {
-    [[unlikely]] if (toResize) {
+void Renderer::resize() noexcept {
+    if (toResize) {
         image = std::vector<uint8_t>(width * height * 3, 0);
         toResize = false;
     }
 }
 
-void inline Renderer::setPixelColor(size_t i, size_t j, float r, float g, float b) {
+void inline Renderer::setPixelColor(size_t i, size_t j, float r, float g, float b) noexcept {
     image[(i + j * width) * 3 + 0] = static_cast<uint8_t>(255.999 * r);
     image[(i + j * width) * 3 + 1] = static_cast<uint8_t>(255.999 * g);
     image[(i + j * width) * 3 + 2] = static_cast<uint8_t>(255.999 * b);
 }
 
-void inline Renderer::setPixelColor(size_t i, size_t j, const glm::vec3 &color) {
+void inline Renderer::setPixelColor(size_t i, size_t j, const glm::vec3 &color) noexcept {
     image[(i + j * width) * 3 + 0] = static_cast<uint8_t>(255.999 * color.r);
     image[(i + j * width) * 3 + 1] = static_cast<uint8_t>(255.999 * color.g);
     image[(i + j * width) * 3 + 2] = static_cast<uint8_t>(255.999 * color.b);
