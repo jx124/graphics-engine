@@ -138,10 +138,28 @@ void Renderer::renderInit() noexcept {
     glBindTexture(GL_TEXTURE_2D, imageTexture);
 
     std::cout << "Number of OpenMP threads: " << omp_get_max_threads() << "\n";
+
+    this->scene.emplace_back(std::make_unique<Sphere>(glm::vec3(0.0f, 0.0f, -1.0f), 0.5f));
+    this->scene.emplace_back(std::make_unique<Sphere>(glm::vec3(0.0f, -100.5f, -1.0f), 100.0f));
 }
 
-glm::vec3 inline rayColor(const Ray &r) {
-    glm::vec3 unitDirection = glm::normalize(r.direction);
+glm::vec3 inline rayColor(const Ray &ray, std::vector<std::unique_ptr<Hittable>> &scene) {
+    HitRecord rec;
+    bool hit = false;
+    float closest = std::numeric_limits<float>::infinity();
+
+    for (auto &object : scene) {
+        if (object->hit(ray, 0.0f, closest, rec)) {
+            hit = true;
+            closest = rec.t;
+        }
+    }
+
+    if (hit) {
+        return 0.5f * (rec.normal + glm::vec3(1.0f));
+    }
+
+    glm::vec3 unitDirection = glm::normalize(ray.direction);
     float t = 0.5f * (unitDirection.y + 1.0f);
     return (1.0f - t) * glm::vec3(1.0f) + t * glm::vec3(0.5f, 0.7f, 1.0f);
 }
@@ -149,14 +167,14 @@ glm::vec3 inline rayColor(const Ray &r) {
 void Renderer::renderLoop(float time) noexcept {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    #pragma omp parallel for schedule(nonmonotonic : dynamic, 8)
+    #pragma omp parallel for schedule(nonmonotonic : auto), shared(image)
     for (size_t j = 0; j < height; j++) {
         for (size_t i = 0; i < width; i++) {
             float u = float(i) / (width - 1);
             float v = float(j) / (height - 1);
 
             Ray r(origin, lowerLeftCorner + u * horizontal + v * vertical - origin);
-            setPixelColor(i, j, rayColor(r));
+            setPixelColor(i, j, rayColor(r, scene));
         }
     }
 
@@ -238,4 +256,31 @@ void inline Renderer::setPixelColor(size_t i, size_t j, const glm::vec3 &color) 
     image[(i + j * width) * 3 + 0] = static_cast<uint8_t>(255.999 * color.r);
     image[(i + j * width) * 3 + 1] = static_cast<uint8_t>(255.999 * color.g);
     image[(i + j * width) * 3 + 2] = static_cast<uint8_t>(255.999 * color.b);
+}
+
+bool Sphere::hit(const Ray &ray, float tMin, float tMax, HitRecord &record) const noexcept {
+    glm::vec3 oc = ray.origin - center;
+    float a = glm::dot(ray.direction, ray.direction);
+    float half_b = glm::dot(oc, ray.direction);
+    float c = glm::dot(oc, oc) - radius * radius;
+    float discriminant = half_b * half_b - a * c;
+    if (discriminant < 0) {
+        return false;
+    } 
+    
+    float sqrtd = sqrt(discriminant);
+    float root = (-half_b - sqrtd) / a;
+    if (root < tMin || root > tMax) {
+        root = (-half_b + sqrtd) / a;
+        if (root < tMin || root > tMax) {
+            return false;
+        }
+    }
+
+    record.t = root;
+    record.point = ray.at(root);
+    glm::vec3 outwardNormal = (record.point - center) / radius;
+    record.setFaceNormal(ray, outwardNormal);
+
+    return true;
 }
