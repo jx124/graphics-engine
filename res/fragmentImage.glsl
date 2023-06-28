@@ -8,5 +8,6 @@ out vec4 FragColor;
 
 void main()
 {
-    FragColor = texture(ImageTexture, TexCoord);
+    float gamma = 2.2;
+    FragColor = pow(texture(ImageTexture, TexCoord), vec4(1 / gamma));
 }

@@ -144,20 +144,26 @@ void Renderer::renderInit() noexcept {
     this->scene.emplace_back(std::make_unique<Sphere>(glm::vec3(0.0f, -100.5f, -1.0f), 100.0f));
 }
 
-glm::vec3 inline rayColor(const Ray &ray, std::vector<std::unique_ptr<Hittable>> &scene) {
+glm::vec3 inline rayColor(const Ray &ray, std::vector<std::unique_ptr<Hittable>> &scene,
+                          int depth, xorshift64_state* rngState) {
+    if (depth <= 0) {
+        return glm::vec3(0.0f);
+    }
+
     HitRecord rec;
     bool hit = false;
     float closest = std::numeric_limits<float>::infinity();
 
     for (auto &object : scene) {
-        if (object->hit(ray, 0.0f, closest, rec)) {
+        if (object->hit(ray, 0.001f, closest, rec)) {
             hit = true;
             closest = rec.t;
         }
     }
 
     if (hit) {
-        return 0.5f * (rec.normal + glm::vec3(1.0f));
+        glm::vec3 target = rec.point + rec.normal + randomInUnitSphere(rngState);
+        return 0.5f * rayColor(Ray(rec.point, target - rec.point), scene, depth - 1, rngState);
     }
 
     glm::vec3 unitDirection = glm::normalize(ray.direction);
@@ -177,16 +183,22 @@ void Renderer::renderLoop(float time) noexcept {
             float v = (float(j) + randomFloat(&rngState)) / (height - 1);
 
             Ray r(origin, lowerLeftCorner + u * horizontal + v * vertical - origin);
-            accumulatePixel(i, j, rayColor(r, scene));
+            if (accumulate) {
+                accumulatePixel(i, j, rayColor(r, scene, 10, &rngState));
+            } else {
+                setPixelColor(i, j, rayColor(r, scene, 10, &rngState));
+            }
         }
     }
 
     // TODO: move to fragment shader
-    #pragma omp parallel for schedule(nonmonotonic : auto), shared(image, accumulator), firstprivate(count)
-    for (size_t i = 0; i < width * height * 3; i++) {
-        image[i] = static_cast<uint8_t>(255.999f * accumulator[i] / static_cast<float>(count));
+    if (accumulate) {
+        #pragma omp parallel for schedule(nonmonotonic : auto), shared(image, accumulator), firstprivate(count)
+        for (size_t i = 0; i < width * height * 3; i++) {
+            image[i] = static_cast<uint8_t>(255.999f * accumulator[i] / static_cast<float>(count));
+        }
+        count++;
     }
-    count++;
 
     loadImage(image);
 
@@ -221,6 +233,10 @@ void Renderer::renderImGui() noexcept {
 
         // ImGui::NewLine();
         ImGui::Text("Framerate: %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+        if (ImGui::Checkbox("Accumulate", &accumulate) && !accumulate) {
+            count = 1;
+            accumulator = std::vector<float>(width * height * 3, 0.0f);
+        }
         ImGui::Text("Accumulated frames: %ld", count);
         ImGui::End();
     }
@@ -240,6 +256,7 @@ void Renderer::showWireframe(bool value) const noexcept {
 }
 
 void Renderer::setViewMatrix(const glm::mat4 &view) {
+    (void)view;
 }
 
 void Renderer::addShader(const std::string &name, const char *vertexPath, const char *fragmentPath) noexcept {
@@ -291,8 +308,8 @@ bool Sphere::hit(const Ray &ray, float tMin, float tMax, HitRecord &record) cons
     float discriminant = half_b * half_b - a * c;
     if (discriminant < 0) {
         return false;
-    } 
-    
+    }
+
     float sqrtd = sqrt(discriminant);
     float root = (-half_b - sqrtd) / a;
     if (root < tMin || root > tMax) {

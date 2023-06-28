@@ -94,6 +94,7 @@ private:
     std::vector<std::unique_ptr<Hittable>> scene;
     std::vector<float> accumulator;
     size_t count;
+    bool accumulate = true;
 
 public:
     Renderer(size_t width, size_t height);

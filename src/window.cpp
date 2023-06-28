@@ -179,14 +179,13 @@ void Window::processInput(GLFWwindow *window) {
     state.view = glm::lookAt(state.cameraPos, state.cameraPos + state.cameraFront, state.cameraUp);
 }
 
-void GLAPIENTRY Window::debugMessageCallback(GLenum source,
-                                             GLenum type,
-                                             GLuint id,
-                                             GLenum severity,
-                                             GLsizei length,
-                                             const GLchar *message,
-                                             const void *userParam) {
+void GLAPIENTRY Window::debugMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
+                                             GLsizei length, const GLchar *message, const void *userParam) {
 
+    (void)source;
+    (void)id;
+    (void)length;
+    (void)userParam;
     fprintf(stderr, "%s type: 0x%x, severity: 0x%x, message: %s\n",
             type == GL_DEBUG_TYPE_ERROR ? "[GL Error]" : "[GL Other]",
             type, severity, message);
