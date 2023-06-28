@@ -23,6 +23,7 @@
 
 #include <omp.h>
 
+#include "sampler.h"
 #include "shader.h"
 
 struct RendererState {

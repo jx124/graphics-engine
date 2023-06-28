@@ -167,11 +167,13 @@ glm::vec3 inline rayColor(const Ray &ray, std::vector<std::unique_ptr<Hittable>>
 void Renderer::renderLoop(float time) noexcept {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    #pragma omp parallel for schedule(nonmonotonic : auto), shared(image)
+    xorshift64_state rngState{static_cast<uint64_t>(time * 1234)};
+
+    #pragma omp parallel for schedule(nonmonotonic : auto), shared(image), firstprivate(rngState)
     for (size_t j = 0; j < height; j++) {
         for (size_t i = 0; i < width; i++) {
-            float u = float(i) / (width - 1);
-            float v = float(j) / (height - 1);
+            float u = (float(i) + randomFloat(&rngState)) / (width - 1);
+            float v = (float(j) + randomFloat(&rngState)) / (height - 1);
 
             Ray r(origin, lowerLeftCorner + u * horizontal + v * vertical - origin);
             setPixelColor(i, j, rayColor(r, scene));
