@@ -92,6 +92,8 @@ private:
     std::vector<uint8_t> image;
     GLuint imageTexture = 0;
     std::vector<std::unique_ptr<Hittable>> scene;
+    std::vector<float> accumulator;
+    size_t count;
 
 public:
     Renderer(size_t width, size_t height);
@@ -121,4 +123,6 @@ public:
     void resize() noexcept;
     void setPixelColor(size_t i, size_t j, float r, float g, float b) noexcept;
     void setPixelColor(size_t i, size_t j, const glm::vec3 &color) noexcept;
+    void accumulatePixel(size_t i, size_t j, float r, float g, float b) noexcept;
+    void accumulatePixel(size_t i, size_t j, const glm::vec3 &color) noexcept;
 };

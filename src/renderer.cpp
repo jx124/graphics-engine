@@ -6,10 +6,11 @@
 
 extern float mixValue;
 
-Renderer::Renderer(size_t width, size_t height) : width(width), height(height) {
+Renderer::Renderer(size_t width, size_t height) : count(1), width(width), height(height) {
     this->state = std::make_unique<RendererState>();
     this->imGuiState = std::make_unique<ImGuiState>();
     this->image = std::vector<uint8_t>(width * height * 3);
+    this->accumulator = std::vector<float>(width * height * 3);
 
     vfov = 45.0f;
     aspectRatio = 16.0f / 9.0f;
@@ -176,9 +177,16 @@ void Renderer::renderLoop(float time) noexcept {
             float v = (float(j) + randomFloat(&rngState)) / (height - 1);
 
             Ray r(origin, lowerLeftCorner + u * horizontal + v * vertical - origin);
-            setPixelColor(i, j, rayColor(r, scene));
+            accumulatePixel(i, j, rayColor(r, scene));
         }
     }
+
+    // TODO: move to fragment shader
+    #pragma omp parallel for schedule(nonmonotonic : auto), shared(image, accumulator), firstprivate(count)
+    for (size_t i = 0; i < width * height * 3; i++) {
+        image[i] = static_cast<uint8_t>(255.999f * accumulator[i] / static_cast<float>(count));
+    }
+    count++;
 
     loadImage(image);
 
@@ -213,6 +221,7 @@ void Renderer::renderImGui() noexcept {
 
         // ImGui::NewLine();
         ImGui::Text("Framerate: %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+        ImGui::Text("Accumulated frames: %ld", count);
         ImGui::End();
     }
 
@@ -244,8 +253,22 @@ const Shader &Renderer::getShader(const std::string &name) noexcept {
 void Renderer::resize() noexcept {
     if (toResize) {
         image = std::vector<uint8_t>(width * height * 3, 0);
+        accumulator = std::vector<float>(width * height * 3, 0);
+        count = 1;
         toResize = false;
     }
+}
+
+void Renderer::accumulatePixel(size_t i, size_t j, float r, float g, float b) noexcept {
+    accumulator[(i + j * width) * 3 + 0] += r;
+    accumulator[(i + j * width) * 3 + 1] += g;
+    accumulator[(i + j * width) * 3 + 2] += b;
+}
+
+void Renderer::accumulatePixel(size_t i, size_t j, const glm::vec3 &color) noexcept {
+    accumulator[(i + j * width) * 3 + 0] += color.r;
+    accumulator[(i + j * width) * 3 + 1] += color.g;
+    accumulator[(i + j * width) * 3 + 2] += color.b;
 }
 
 void inline Renderer::setPixelColor(size_t i, size_t j, float r, float g, float b) noexcept {
