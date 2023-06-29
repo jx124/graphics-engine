@@ -91,6 +91,7 @@ private:
     std::unique_ptr<ImGuiState> imGuiState;
     std::vector<uint8_t> image;
     GLuint imageTexture = 0;
+    GLuint accumulatorTexture = 0;
     std::vector<std::unique_ptr<Hittable>> scene;
     std::vector<float> accumulator;
     size_t count;
@@ -116,6 +117,7 @@ public:
     void renderImGui() noexcept;
     void updateLoop(float time) noexcept;
     void loadImage(const std::vector<uint8_t> &image) noexcept;
+    void loadAccumulatedImage(const std::vector<float> &image, int count) noexcept;
     void showWireframe(bool value) const noexcept;
     void setViewMatrix(const glm::mat4 &view);
     // TODO: change const char* here and in Shader class

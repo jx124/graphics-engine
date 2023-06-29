@@ -28,8 +28,8 @@ Window::~Window() {
 void Window::createWindow() {
     // Initialize glfw
     glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 #ifdef __APPLE__
@@ -60,9 +60,12 @@ void Window::createWindow() {
     glDebugMessageCallback(Window::debugMessageCallback, 0);
 #endif
 
+    std::cout << "Using " << glGetString(GL_RENDERER) << std::endl;
+
     // TODO: handle mouse events only on mouse hold
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     glfwSetCursorPosCallback(window, Window::mouseCallback);
+    glfwSwapInterval(1);
 
     // Initialize ImGui
     IMGUI_CHECKVERSION();

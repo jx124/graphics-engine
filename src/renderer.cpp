@@ -97,22 +97,14 @@ size_t Renderer::loadTexture2D(std::string_view filePath, GLint format) {
 }
 
 void Renderer::loadImage(const std::vector<uint8_t> &image) noexcept {
-    if (imageTexture == 0) {
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glGenTextures(1, &imageTexture);
-        glBindTexture(GL_TEXTURE_2D, imageTexture);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->width, this->height, 0, GL_RGB, GL_UNSIGNED_BYTE, image.data());
-
-        return;
-    }
-
     glBindTexture(GL_TEXTURE_2D, imageTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->width, this->height, 0, GL_RGB, GL_UNSIGNED_BYTE, image.data());
+}
+
+void Renderer::loadAccumulatedImage(const std::vector<float> &image, int count) noexcept {
+    glBindTexture(GL_TEXTURE_2D, imageTexture);
+    getShader("Image").setInt("count", count);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, this->width, this->height, 0, GL_RGB, GL_FLOAT, image.data());
 }
 
 void Renderer::renderInit() noexcept {
@@ -133,19 +125,31 @@ void Renderer::renderInit() noexcept {
 
     getShader("Image").bind();
     getShader("Image").setInt("ImageTexture", 0);
+    getShader("Image").setInt("count", count);
 
-    loadImage(image);
+    glPixelStoref(GL_UNPACK_ALIGNMENT, 1);
+    glGenTextures(1, &imageTexture);
+    glBindTexture(GL_TEXTURE_2D, imageTexture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glBindTexture(GL_TEXTURE_2D, imageTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, this->width, this->height, 0, GL_RGB, GL_FLOAT, this->accumulator.data());
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, imageTexture);
 
-    std::cout << "Number of OpenMP threads: " << omp_get_max_threads() << "\n";
+    std::cout << "OpenMP max threads: " << omp_get_max_threads() << "\n";
 
     this->scene.emplace_back(std::make_unique<Sphere>(glm::vec3(0.0f, 0.0f, -1.0f), 0.5f));
     this->scene.emplace_back(std::make_unique<Sphere>(glm::vec3(0.0f, -100.5f, -1.0f), 100.0f));
 }
 
 glm::vec3 inline rayColor(const Ray &ray, std::vector<std::unique_ptr<Hittable>> &scene,
-                          int depth, xorshift64_state* rngState) {
+                          int depth, xorshift64_state *rngState) {
     if (depth <= 0) {
         return glm::vec3(0.0f);
     }
@@ -191,16 +195,13 @@ void Renderer::renderLoop(float time) noexcept {
         }
     }
 
-    // TODO: move to fragment shader
     if (accumulate) {
-        #pragma omp parallel for schedule(nonmonotonic : auto), shared(image, accumulator), firstprivate(count)
-        for (size_t i = 0; i < width * height * 3; i++) {
-            image[i] = static_cast<uint8_t>(255.999f * accumulator[i] / static_cast<float>(count));
-        }
+        loadAccumulatedImage(accumulator, count);
         count++;
+    } else {
+        loadImage(image);
     }
 
-    loadImage(image);
 
     glBindVertexArray(VAOs[0]);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -233,9 +234,12 @@ void Renderer::renderImGui() noexcept {
 
         // ImGui::NewLine();
         ImGui::Text("Framerate: %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-        if (ImGui::Checkbox("Accumulate", &accumulate) && !accumulate) {
-            count = 1;
-            accumulator = std::vector<float>(width * height * 3, 0.0f);
+        if (ImGui::Checkbox("Accumulate", &accumulate)) {
+            if (!accumulate) {
+                count = 1;
+                accumulator = std::vector<float>(width * height * 3, 0.0f);
+                getShader("Image").setInt("count", 1);
+            }
         }
         ImGui::Text("Accumulated frames: %ld", count);
         ImGui::End();
