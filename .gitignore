@@ -1,0 +1,13 @@
+.cache/
+build/
+compile_commands.json
+include/glad/*
+include/glfw/*
+include/KHR/*
+include/glm/*
+src/glad.c
+
+!include/glad/readme.md
+!include/glfw/readme.md
+!include/glm/readme.md
+!include/KHR/readme.md
