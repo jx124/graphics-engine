@@ -7,6 +7,11 @@
 #include <string>
 #include <cstdio>
 
+struct WindowState {
+    bool is_wireframe = false;
+    bool key_released = true;
+};
+
 class Window {
 public:
     Window(int width, int height, std::string title);
@@ -16,6 +21,7 @@ public:
     int width, height;
     std::string title;
     GLFWwindow* ptr;
+    WindowState state;
 
 private:
     static void framebuffer_size_callback(GLFWwindow* window, int width, int height);

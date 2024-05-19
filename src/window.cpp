@@ -27,7 +27,9 @@ Window::Window(int width, int height, std::string title) : width(width), height(
     std::cout << "[OpenGL] Version: " << glGetString(GL_VERSION) << std::endl;
     glDebugMessageCallback(error_message_callback, nullptr);
 #endif
-        
+
+    glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
+
     this->ptr = window;
 };
 
@@ -39,6 +41,14 @@ void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height
 void Window::process_input() {
     if (glfwGetKey(this->ptr, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(this->ptr, true);
+    }
+    if (glfwGetKey(this->ptr, GLFW_KEY_TAB) == GLFW_PRESS && this->state.key_released) {
+        this->state.key_released = false;
+        this->state.is_wireframe = !this->state.is_wireframe;
+        glPolygonMode(GL_FRONT_AND_BACK, this->state.is_wireframe ? GL_LINE : GL_FILL);
+    }
+    if (glfwGetKey(this->ptr, GLFW_KEY_TAB) == GLFW_RELEASE && !this->state.key_released) {
+        this->state.key_released = true;
     }
 }
 

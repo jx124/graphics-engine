@@ -46,8 +46,6 @@ int main(void) {
     // do not unbind EBO while VAO is still active
     glBindVertexArray(0);
 
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
     const char* vertexShaderSource = R"foo(#version 430 core
     layout (location = 0) in vec3 aPos;
 
