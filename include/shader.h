@@ -14,9 +14,9 @@ public:
     
     void use() { glUseProgram(this->id); };
 
-    void set(const std::string& name, bool value);
-    void set(const std::string& name, int value);
-    void set(const std::string& name, float value);
+    void set(const std::string& name, bool value) { glUniform1i(glGetUniformLocation(this->id, name.c_str()), (int)value); };
+    void set(const std::string& name, int value) { glUniform1i(glGetUniformLocation(this->id, name.c_str()), value); };
+    void set(const std::string& name, float value) { glUniform1f(glGetUniformLocation(this->id, name.c_str()), value); };
 
     GLuint id;
 

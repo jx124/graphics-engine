@@ -50,6 +50,12 @@ void Window::process_input() {
     if (glfwGetKey(this->ptr, GLFW_KEY_TAB) == GLFW_RELEASE && !this->state.key_released) {
         this->state.key_released = true;
     }
+    if (glfwGetKey(this->ptr, GLFW_KEY_UP) == GLFW_PRESS) {
+        this->state.mix = std::min(this->state.mix + 0.02f, 1.0f);
+    }
+    if (glfwGetKey(this->ptr, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        this->state.mix = std::max(this->state.mix - 0.02f, 0.0f);
+    }
 }
 
 void Window::error_message_callback(GLenum source, GLenum type, GLuint id, GLenum severity,

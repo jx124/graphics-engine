@@ -6,10 +6,12 @@
 #include <iostream>
 #include <string>
 #include <cstdio>
+#include <algorithm>
 
 struct WindowState {
     bool is_wireframe = false;
     bool key_released = true;
+    float mix = 0.0f;
 };
 
 class Window {
