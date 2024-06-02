@@ -112,6 +112,10 @@ void Window::error_message_callback(GLenum source, GLenum type, GLuint id, GLenu
             break;
     }
 
+    if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) {
+        return;
+    }
+
     std::fprintf(stderr, "[OpenGL] %s: %s. Severity: %s. Message: %s\n",
             type_str.c_str(), source_str.c_str(), severity_str.c_str(), message);
 }
