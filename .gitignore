@@ -1,4 +1,5 @@
 .cache/
+.vscode/
 build/
 compile_commands.json
 include/glad/*
@@ -6,6 +7,7 @@ include/glfw/*
 include/KHR/*
 include/glm/*
 src/glad.c
+imgui.ini
 
 !include/glad/readme.md
 !include/glfw/readme.md
