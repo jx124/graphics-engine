@@ -14,7 +14,7 @@
 #include <vector>
 
 int main(void) {
-    Window window(800, 600, "Voxel Engine");
+    Window window(800, 600, "Graphics Engine");
 
     std::vector<float> vertices = {
         // positions          // colors           // texture coords

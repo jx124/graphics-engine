@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(voxelengine)
+project(graphics-engine)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -19,9 +19,9 @@ file(GLOB_RECURSE source CONFIGURE_DEPENDS
 
 add_subdirectory("include/glfw")
 
-add_executable(voxelengine ${source})
+add_executable(graphics-engine ${source})
 
 find_package(OpenMP REQUIRED)
 
-target_include_directories(voxelengine PUBLIC "include/")
-target_link_libraries(voxelengine PUBLIC dl glfw OpenMP::OpenMP_CXX)
+target_include_directories(graphics-engine PUBLIC "include/")
+target_link_libraries(graphics-engine PUBLIC dl glfw OpenMP::OpenMP_CXX)

@@ -1,4 +1,4 @@
-# OpenGL Voxel Engine
+# OpenGL Graphics Engine
 
 ## Quick Start
 1. Download the latest GLFW source packages from [here](https://www.glfw.org/download.html) and copy them into `include/glfw/`.
