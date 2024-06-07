@@ -101,7 +101,20 @@ void Renderer::render_ui() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-    ImGui::ShowDemoWindow();
+    
+    static float prev_time = 0.0f;
+    float curr_time = glfwGetTime();
+    float frame_time = curr_time - prev_time;
+    float fps = 1.0f / frame_time;
+    prev_time = curr_time;
+
+    ImGui::DockSpaceOverViewport(0, nullptr, ImGuiDockNodeFlags_PassthruCentralNode);
+
+    if (window->state.show_debug) {
+        ImGui::Begin("Debug Menu", &window->state.show_debug);
+        ImGui::Text("Frame Time: %.1f ms (%.1f FPS)", frame_time * 1000.0f, fps);
+        ImGui::End();
+    }
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

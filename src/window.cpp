@@ -42,13 +42,20 @@ void Window::process_input() {
     if (glfwGetKey(this->ptr, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(this->ptr, true);
     }
-    if (glfwGetKey(this->ptr, GLFW_KEY_TAB) == GLFW_PRESS && this->state.key_released) {
-        this->state.key_released = false;
+    if (glfwGetKey(this->ptr, GLFW_KEY_TAB) == GLFW_PRESS && this->state.tab_key_released) {
+        this->state.tab_key_released = false;
         this->state.is_wireframe = !this->state.is_wireframe;
         glPolygonMode(GL_FRONT_AND_BACK, this->state.is_wireframe ? GL_LINE : GL_FILL);
     }
-    if (glfwGetKey(this->ptr, GLFW_KEY_TAB) == GLFW_RELEASE && !this->state.key_released) {
-        this->state.key_released = true;
+    if (glfwGetKey(this->ptr, GLFW_KEY_TAB) == GLFW_RELEASE && !this->state.tab_key_released) {
+        this->state.tab_key_released = true;
+    }
+    if (glfwGetKey(this->ptr, GLFW_KEY_E) == GLFW_PRESS && this->state.e_key_released) {
+        this->state.e_key_released = false;
+        this->state.show_debug = !this->state.show_debug;
+    }
+    if (glfwGetKey(this->ptr, GLFW_KEY_E) == GLFW_RELEASE && !this->state.e_key_released) {
+        this->state.e_key_released = true;
     }
     if (glfwGetKey(this->ptr, GLFW_KEY_UP) == GLFW_PRESS) {
         this->state.mix = std::min(this->state.mix + 0.02f, 1.0f);
