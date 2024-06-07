@@ -90,8 +90,26 @@ void Renderer::render() {
     glClearColor(0.2f, 0.6f, 0.6f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    glm::mat4 trans = glm::mat4(1.0f);
+    // each step is a right multiplication of a transformation matrix, so transformation is applied backwards
+    trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+    trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+
     for (auto &object : objects) {
         object.shader.set("textureMix", window->state.mix);
+        object.shader.set("transform", trans);
+    }
+
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+    trans = glm::mat4(1.0f);
+    // each step is a right multiplication of a transformation matrix, so transformation is applied backwards
+    trans = glm::translate(trans, glm::vec3(-0.5f, 0.5f, 0.0f));
+    trans = glm::scale(trans, glm::sin((float)glfwGetTime() * glm::vec3(1.0f)));
+
+    for (auto &object : objects) {
+        object.shader.set("textureMix", window->state.mix);
+        object.shader.set("transform", trans);
     }
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
