@@ -10,12 +10,49 @@ Renderer::Renderer(Window* window) {
 }
 
 void Renderer::init() {
+    // cube mesh
     std::vector<float> vertices = {
-        // positions          // colors           // texture coords
-         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
 
     std::vector<GLuint> indices = {
@@ -31,25 +68,12 @@ void Renderer::init() {
     VBO.bind();
     VBO.write_buffer_data(vertices, GL_STATIC_DRAW);
 
-    ElementBuffer EBO;
-    EBO.bind();
-    EBO.write_buffer_data(indices, GL_STATIC_DRAW);
-
     // define vertex attribute format in VBO
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    // this is allowed since glVertexAttribPointer call already binds to VBO
-    VBO.unbind();
-
-    // do not unbind EBO while VAO is still active
-    VAO.unbind();
 
     Shader shader("assets/shaders/vertex.glsl", "assets/shaders/fragment.glsl");
 
@@ -73,46 +97,68 @@ void Renderer::init() {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     // Setup Platform/Renderer backends
-    ImGui_ImplGlfw_InitForOpenGL(window->ptr, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
+    ImGui_ImplGlfw_InitForOpenGL(window->ptr, true);
     ImGui_ImplOpenGL3_Init();
 }
 
 void Renderer::update() {
+    float prev_time = window->state.curr_time;
+    float curr_time = glfwGetTime();
+    float delta_time = curr_time - prev_time;
 
+    window->state.curr_time = curr_time;
+    window->state.prev_time = prev_time;
+    window->state.delta_time = delta_time;
 }
 
 void Renderer::render() {
     glClearColor(0.2f, 0.6f, 0.6f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
 
-    glm::mat4 trans = glm::mat4(1.0f);
-    // each step is a right multiplication of a transformation matrix, so transformation is applied backwards
-    trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-    trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+    glm::vec3 cubePositions[] = {
+        glm::vec3( 0.0f,  0.0f,  0.0f), 
+        glm::vec3( 2.0f,  5.0f, -15.0f), 
+        glm::vec3(-1.5f, -2.2f, -2.5f),  
+        glm::vec3(-3.8f, -2.0f, -12.3f),  
+        glm::vec3( 2.4f, -0.4f, -3.5f),  
+        glm::vec3(-1.7f,  3.0f, -7.5f),  
+        glm::vec3( 1.3f, -2.0f, -2.5f),  
+        glm::vec3( 1.5f,  2.0f, -2.5f), 
+        glm::vec3( 1.5f,  0.2f, -1.5f), 
+        glm::vec3(-1.3f,  1.0f, -1.5f)  
+    };
+
+    glm::mat4 view = glm::lookAt(window->state.camera_pos,
+                                 window->state.camera_pos + window->state.camera_front,
+                                 window->state.camera_up);
+
+    glm::mat4 projection;
+    projection = glm::perspective(glm::radians(window->state.fov), 800.0f / 600.0f, 0.1f, 100.0f);
 
     for (auto &object : objects) {
+        object.vao.bind();
         object.shader.set("textureMix", window->state.mix);
-        object.shader.set("transform", trans);
+        object.shader.set("view", view);
+        object.shader.set("projection", projection);
+
+        for (int i = 0; i < 10; i++) {
+            float angle = 20.0f * i + 50.0f * glfwGetTime();
+
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+
+            object.shader.set("model", model);
+
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
     }
-
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-    trans = glm::mat4(1.0f);
-    // each step is a right multiplication of a transformation matrix, so transformation is applied backwards
-    trans = glm::translate(trans, glm::vec3(-0.5f, 0.5f, 0.0f));
-    trans = glm::scale(trans, glm::sin((float)glfwGetTime() * glm::vec3(1.0f)));
-
-    for (auto &object : objects) {
-        object.shader.set("textureMix", window->state.mix);
-        object.shader.set("transform", trans);
-    }
-
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
 void Renderer::render_ui() {
@@ -120,17 +166,25 @@ void Renderer::render_ui() {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
     
-    static float prev_time = 0.0f;
-    float curr_time = glfwGetTime();
-    float frame_time = curr_time - prev_time;
-    float fps = 1.0f / frame_time;
-    prev_time = curr_time;
+    float fps = 1.0f / window->state.delta_time;
 
     ImGui::DockSpaceOverViewport(0, nullptr, ImGuiDockNodeFlags_PassthruCentralNode);
 
     if (window->state.show_debug) {
+        ImGui::ShowDemoWindow();
+
         ImGui::Begin("Debug Menu", &window->state.show_debug);
-        ImGui::Text("Frame Time: %.1f ms (%.1f FPS)", frame_time * 1000.0f, fps);
+        ImGui::Text("Frame Time: %.1f ms (%.1f FPS)", window->state.delta_time * 1000.0f, fps);
+        ImGui::Text("Last mouse position: (%d, %d)", window->state.last_x, window->state.last_y);
+        ImGui::Text("Pitch: %.1f, Yaw: %.1f", window->state.pitch, window->state.yaw);
+        ImGui::Text("FOV: %.1f", window->state.fov);
+
+        ImGui::SeparatorText("Settings");
+        ImGui::Text("Camera Speed");
+        ImGui::SliderFloat("##CameraSpeed", &window->state.camera_speed, 0.1f, 10.0f, "%.1f");
+        ImGui::Text("Camera Sensitivity");
+        ImGui::SliderFloat("##CameraSensitivity", &window->state.camera_sensitivity, 0.01f, 1.0f, "%.2f");
+
         ImGui::End();
     }
 
