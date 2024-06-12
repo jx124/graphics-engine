@@ -139,7 +139,8 @@ void Renderer::render() {
                                  window->state.camera_up);
 
     glm::mat4 projection;
-    projection = glm::perspective(glm::radians(window->state.fov), 800.0f / 600.0f, 0.1f, 100.0f);
+    float aspect_ratio = static_cast<float>(window->width) / window->height;
+    projection = glm::perspective(glm::radians(window->state.fov), aspect_ratio, 0.1f, 100.0f);
 
     for (auto &object : objects) {
         object.vao.bind();
@@ -178,6 +179,10 @@ void Renderer::render_ui() {
         ImGui::Text("Last mouse position: (%d, %d)", window->state.last_x, window->state.last_y);
         ImGui::Text("Pitch: %.1f, Yaw: %.1f", window->state.pitch, window->state.yaw);
         ImGui::Text("FOV: %.1f", window->state.fov);
+        ImGui::Text("Camera Direction: (%.3f, %.3f, %.3f)",
+                    window->state.camera_front.x,
+                    window->state.camera_front.y,
+                    window->state.camera_front.z);
 
         ImGui::SeparatorText("Settings");
         ImGui::Text("Camera Speed");

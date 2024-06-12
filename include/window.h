@@ -24,7 +24,7 @@ struct WindowState {
     float camera_speed = 5.0f;
     float camera_sensitivity = 0.1f;
     float pitch = 0.0f;
-    float yaw = 0.0f;
+    float yaw = -90.0f;
     float fov = 45.0f;
 
     float prev_time = 0.0f;

@@ -40,7 +40,10 @@ Window::Window(int width, int height, std::string title) : width(width), height(
 };
 
 void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    (void) window;
+    Window* win_ptr = static_cast<Window*>(glfwGetWindowUserPointer(window));
+    win_ptr->width = width;
+    win_ptr->height= height;
+
     glViewport(0, 0, width, height);
 }
 
@@ -156,6 +159,10 @@ void Window::error_message_callback(GLenum source, GLenum type, GLuint id, GLenu
 void Window::mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {
     // get pointer to current Window instance
     Window* win_ptr = static_cast<Window*>(glfwGetWindowUserPointer(window));
+
+    if (win_ptr->state.show_debug) {
+        return;
+    }
 
     if (win_ptr->state.first_mouse) {
         win_ptr->state.last_x = x_pos;
