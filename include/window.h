@@ -33,6 +33,10 @@ struct WindowState {
 
     int last_x;
     int last_y;
+
+    glm::vec3 light_color = {1.0f, 1.0f, 1.0f};
+    float ambient = 0.1f;
+    float diffuse = 5.0f;
 };
 
 class Window {

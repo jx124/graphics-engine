@@ -12,54 +12,49 @@ Renderer::Renderer(Window* window) {
 void Renderer::init() {
     // cube mesh
     std::vector<float> vertices = {
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-        0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  0.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f,  1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
 
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  1.0f,  1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,  0.0f,  0.0f,
 
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
 
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f,
 
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
 
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
     };
 
-    std::vector<GLuint> indices = {
-        0, 1, 3,  // first Triangle
-        1, 2, 3   // second Triangle
-    };
-    
     // VAO object points to VBOs and EBOs, thus storing the vertex buffer attribute configs made when it is bound
     VertexArray VAO;
     VAO.bind();
@@ -69,13 +64,16 @@ void Renderer::init() {
     VBO.write_buffer_data(vertices, GL_STATIC_DRAW);
 
     // define vertex attribute format in VBO
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    Shader shader("assets/shaders/vertex.glsl", "assets/shaders/fragment.glsl");
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    Shader shader("assets/shaders/vertex.glsl", "assets/shaders/box_fragment.glsl");
 
     VAO.bind();
 
@@ -88,10 +86,31 @@ void Renderer::init() {
     Texture texture2("assets/textures/awesomeface.png", GL_RGBA);
 
     shader.use();
+
+    glm::vec3 light_pos(1.2f, 1.0f, 2.0f);
+    shader.set("lightPos", light_pos);
+
     shader.set("texture1", texture1.index);
     shader.set("texture2", texture2.index);
 
     objects.push_back({VAO, shader});
+
+    VertexArray light_VAO;
+    light_VAO.bind();
+    VBO.bind(); // reuse container data
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    Shader light_shader("assets/shaders/vertex.glsl", "assets/shaders/light_fragment.glsl");
+    light_shader.use();
+
+    glm::mat4 model(1.0f);
+    model = glm::translate(model, light_pos);
+    model = glm::scale(model, glm::vec3(0.2f));
+    light_shader.set("model", model);
+
+    objects.push_back({light_VAO, light_shader});
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -117,7 +136,7 @@ void Renderer::update() {
 }
 
 void Renderer::render() {
-    glClearColor(0.2f, 0.6f, 0.6f, 1.0f);
+    glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
 
@@ -142,21 +161,30 @@ void Renderer::render() {
     float aspect_ratio = static_cast<float>(window->width) / window->height;
     projection = glm::perspective(glm::radians(window->state.fov), aspect_ratio, 0.1f, 100.0f);
 
-    for (auto &object : objects) {
+    for (size_t j = 0; j < objects.size(); j++) {
+        const auto& object = objects[j];
         object.vao.bind();
-        object.shader.set("textureMix", window->state.mix);
+        object.shader.use();
+
         object.shader.set("view", view);
         object.shader.set("projection", projection);
 
-        for (int i = 0; i < 10; i++) {
-            float angle = 20.0f * i + 50.0f * glfwGetTime();
+        if (j == 0) {
+            object.shader.set("textureMix", window->state.mix);
+            for (int i = 0; i < 10; i++) {
+                float angle = 20.0f * i + 50.0f * glfwGetTime();
 
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+                glm::mat4 model = glm::mat4(1.0f);
+                model = glm::translate(model, cubePositions[i]);
+                model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-            object.shader.set("model", model);
+                object.shader.set("model", model);
+                object.shader.set("ambientStrength", window->state.ambient);
+                object.shader.set("lightColor", window->state.light_color * window->state.diffuse);
 
+                glDrawArrays(GL_TRIANGLES, 0, 36);
+            }
+        } else {
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
     }
@@ -175,6 +203,8 @@ void Renderer::render_ui() {
         ImGui::ShowDemoWindow();
 
         ImGui::Begin("Debug Menu", &window->state.show_debug);
+        ImGui::PushItemWidth(-ImGui::GetWindowWidth() * 0.003f);
+        
         ImGui::Text("Frame Time: %.1f ms (%.1f FPS)", window->state.delta_time * 1000.0f, fps);
         ImGui::Text("Last mouse position: (%d, %d)", window->state.last_x, window->state.last_y);
         ImGui::Text("Pitch: %.1f, Yaw: %.1f", window->state.pitch, window->state.yaw);
@@ -189,7 +219,14 @@ void Renderer::render_ui() {
         ImGui::SliderFloat("##CameraSpeed", &window->state.camera_speed, 0.1f, 10.0f, "%.1f");
         ImGui::Text("Camera Sensitivity");
         ImGui::SliderFloat("##CameraSensitivity", &window->state.camera_sensitivity, 0.01f, 1.0f, "%.2f");
+        ImGui::Text("Light Color");
+        ImGui::ColorEdit3("##LightColor", glm::value_ptr(window->state.light_color));
+        ImGui::Text("Ambient Light Brightness");
+        ImGui::SliderFloat("##Ambient", &window->state.ambient, 0.0f, 1.0f);
+        ImGui::Text("Diffuse Light Brightness");
+        ImGui::SliderFloat("##Diffuse", &window->state.diffuse, 0.0f, 10.0f);
 
+        ImGui::PopItemWidth();
         ImGui::End();
     }
 
