@@ -37,6 +37,7 @@ struct WindowState {
     glm::vec3 light_color = {1.0f, 1.0f, 1.0f};
     float ambient = 0.1f;
     float diffuse = 5.0f;
+    float specular = 0.5f;
 };
 
 class Window {

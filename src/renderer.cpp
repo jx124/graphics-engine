@@ -180,7 +180,10 @@ void Renderer::render() {
 
                 object.shader.set("model", model);
                 object.shader.set("ambientStrength", window->state.ambient);
-                object.shader.set("lightColor", window->state.light_color * window->state.diffuse);
+                object.shader.set("diffuseStrength", window->state.diffuse);
+                object.shader.set("specularStrength", window->state.specular);
+                object.shader.set("lightColor", window->state.light_color);
+                object.shader.set("viewPos", window->state.camera_pos);
 
                 glDrawArrays(GL_TRIANGLES, 0, 36);
             }
@@ -221,10 +224,12 @@ void Renderer::render_ui() {
         ImGui::SliderFloat("##CameraSensitivity", &window->state.camera_sensitivity, 0.01f, 1.0f, "%.2f");
         ImGui::Text("Light Color");
         ImGui::ColorEdit3("##LightColor", glm::value_ptr(window->state.light_color));
-        ImGui::Text("Ambient Light Brightness");
+        ImGui::Text("Ambient Strength");
         ImGui::SliderFloat("##Ambient", &window->state.ambient, 0.0f, 1.0f);
-        ImGui::Text("Diffuse Light Brightness");
+        ImGui::Text("Diffuse Strength");
         ImGui::SliderFloat("##Diffuse", &window->state.diffuse, 0.0f, 10.0f);
+        ImGui::Text("Specular Strength");
+        ImGui::SliderFloat("##Specular", &window->state.specular, 0.0f, 1.0f);
 
         ImGui::PopItemWidth();
         ImGui::End();
