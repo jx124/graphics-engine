@@ -179,10 +179,13 @@ void Renderer::render() {
                 model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
                 object.shader.set("model", model);
-                object.shader.set("ambientStrength", window->state.ambient);
-                object.shader.set("diffuseStrength", window->state.diffuse);
-                object.shader.set("specularStrength", window->state.specular);
-                object.shader.set("lightColor", window->state.light_color);
+                object.shader.set("material.ambient", window->state.ambient);
+                object.shader.set("material.diffuse", window->state.diffuse);
+                object.shader.set("material.specular", window->state.specular);
+                object.shader.set("material.shininess", window->state.shininess);
+                object.shader.set("light.ambient", window->state.light_ambient);
+                object.shader.set("light.diffuse", window->state.light_diffuse);
+                object.shader.set("light.specular", window->state.light_specular);
                 object.shader.set("viewPos", window->state.camera_pos);
 
                 glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -222,14 +225,22 @@ void Renderer::render_ui() {
         ImGui::SliderFloat("##CameraSpeed", &window->state.camera_speed, 0.1f, 10.0f, "%.1f");
         ImGui::Text("Camera Sensitivity");
         ImGui::SliderFloat("##CameraSensitivity", &window->state.camera_sensitivity, 0.01f, 1.0f, "%.2f");
-        ImGui::Text("Light Color");
-        ImGui::ColorEdit3("##LightColor", glm::value_ptr(window->state.light_color));
-        ImGui::Text("Ambient Strength");
-        ImGui::SliderFloat("##Ambient", &window->state.ambient, 0.0f, 1.0f);
-        ImGui::Text("Diffuse Strength");
-        ImGui::SliderFloat("##Diffuse", &window->state.diffuse, 0.0f, 10.0f);
-        ImGui::Text("Specular Strength");
-        ImGui::SliderFloat("##Specular", &window->state.specular, 0.0f, 1.0f);
+
+        ImGui::Text("Light Ambient");
+        ImGui::ColorEdit3("##LightAmbient", &window->state.light_ambient[0]);
+        ImGui::Text("Light Diffuse");
+        ImGui::ColorEdit3("##LightDiffuse", &window->state.light_diffuse[0]);
+        ImGui::Text("Light Specular");
+        ImGui::ColorEdit3("##LightSpecular", &window->state.light_specular[0]);
+
+        ImGui::Text("Material Ambient");
+        ImGui::ColorEdit3("##Ambient", &window->state.ambient[0]);
+        ImGui::Text("Material Diffuse");
+        ImGui::ColorEdit3("##Diffuse", &window->state.diffuse[0]);
+        ImGui::Text("Material Specular");
+        ImGui::ColorEdit3("##Specular", &window->state.specular[0]);
+        ImGui::Text("Shininess");
+        ImGui::ColorEdit3("##Shininess", &window->state.shininess);
 
         ImGui::PopItemWidth();
         ImGui::End();

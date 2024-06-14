@@ -34,10 +34,14 @@ struct WindowState {
     int last_x;
     int last_y;
 
-    glm::vec3 light_color = {1.0f, 1.0f, 1.0f};
-    float ambient = 0.1f;
-    float diffuse = 5.0f;
-    float specular = 0.5f;
+    glm::vec3 light_ambient = {0.2f, 0.2f, 0.2f};
+    glm::vec3 light_diffuse = {0.5f, 0.5f, 0.5f};
+    glm::vec3 light_specular = {1.0f, 1.0f, 1.0f};
+
+    glm::vec3 ambient = {1.0f, 0.5f, 0.31f};
+    glm::vec3 diffuse = {1.0f, 0.5f, 0.31f};
+    glm::vec3 specular = {0.5f, 0.5f, 0.5f};
+    float shininess = 32.0f;
 };
 
 class Window {
