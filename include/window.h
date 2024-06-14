@@ -34,6 +34,7 @@ struct WindowState {
     int last_x;
     int last_y;
 
+    float light_brightness = 5.0f;
     glm::vec3 light_ambient = {0.2f, 0.2f, 0.2f};
     glm::vec3 light_diffuse = {0.5f, 0.5f, 0.5f};
     glm::vec3 light_specular = {1.0f, 1.0f, 1.0f};

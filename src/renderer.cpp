@@ -82,16 +82,16 @@ void Renderer::init() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    Texture texture1("assets/textures/container.jpg", GL_RGB);
-    Texture texture2("assets/textures/awesomeface.png", GL_RGBA);
+    Texture container_texture("assets/textures/container2.png", GL_RGBA);
+    Texture specular_map("assets/textures/container2_specular.png", GL_RGBA);
 
     shader.use();
 
     glm::vec3 light_pos(1.2f, 1.0f, 2.0f);
     shader.set("lightPos", light_pos);
 
-    shader.set("texture1", texture1.index);
-    shader.set("texture2", texture2.index);
+    shader.set("material.diffuse", container_texture.index);
+    shader.set("material.specular", specular_map.index);
 
     objects.push_back({VAO, shader});
 
@@ -179,10 +179,8 @@ void Renderer::render() {
                 model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
                 object.shader.set("model", model);
-                object.shader.set("material.ambient", window->state.ambient);
-                object.shader.set("material.diffuse", window->state.diffuse);
-                object.shader.set("material.specular", window->state.specular);
                 object.shader.set("material.shininess", window->state.shininess);
+                object.shader.set("light.brightness", window->state.light_brightness);
                 object.shader.set("light.ambient", window->state.light_ambient);
                 object.shader.set("light.diffuse", window->state.light_diffuse);
                 object.shader.set("light.specular", window->state.light_specular);
@@ -226,6 +224,8 @@ void Renderer::render_ui() {
         ImGui::Text("Camera Sensitivity");
         ImGui::SliderFloat("##CameraSensitivity", &window->state.camera_sensitivity, 0.01f, 1.0f, "%.2f");
 
+        ImGui::Text("Light Brightness");
+        ImGui::SliderFloat("##LightBrightness", &window->state.light_brightness, 0.0f, 10.0f);
         ImGui::Text("Light Ambient");
         ImGui::ColorEdit3("##LightAmbient", &window->state.light_ambient[0]);
         ImGui::Text("Light Diffuse");
