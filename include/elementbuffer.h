@@ -14,7 +14,8 @@ public:
     void unbind() { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); }
 
     // copies user-defined data into currently bound buffer
-    void write_buffer_data(const std::vector<GLuint>& buffer, GLenum usage) {
+    template <typename T>
+    void write_buffer_data(const std::vector<T>& buffer, GLenum usage) {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, buffer.size() * sizeof(GLuint), buffer.data(), usage);
     }
 

@@ -13,4 +13,6 @@ public:
     int width, height, n_channels;
     int index; // for setting shader uniforms
     static inline int num_textures = 0;
+    std::string type; // diffuse or specular, TODO: use enum
+    std::string path;
 };

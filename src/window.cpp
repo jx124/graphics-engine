@@ -1,4 +1,5 @@
 #include "window.h"
+#include <csignal>
 
 Window::Window(int width, int height, std::string title) : width(width), height(height), title(title) {
     glfwInit();
@@ -48,6 +49,10 @@ void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height
 }
 
 void Window::process_input() {
+    // Close window
+    if (glfwGetKey(this->ptr, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        glfwSetWindowShouldClose(this->ptr, true);
+    }
     // Enable wireframe
     if (glfwGetKey(this->ptr, GLFW_KEY_TAB) == GLFW_PRESS && this->state.tab_key_released) {
         this->state.tab_key_released = false;
@@ -150,6 +155,8 @@ void Window::error_message_callback(GLenum source, GLenum type, GLuint id, GLenu
 
     std::fprintf(stderr, "[OpenGL] %s: %s. Severity: %s. Message: %s\n",
             type_str.c_str(), source_str.c_str(), severity_str.c_str(), message);
+    glFinish();
+    raise(SIGTRAP);
 }
 
 void Window::mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {

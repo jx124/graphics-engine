@@ -8,6 +8,7 @@ include/KHR/*
 include/glm/*
 src/glad.c
 imgui.ini
+assets/models/*
 
 !include/glad/readme.md
 !include/glfw/readme.md

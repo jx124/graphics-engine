@@ -1,5 +1,6 @@
 #pragma once
 
+#include "model.h"
 #include "window.h"
 #include "vertexarray.h"
 #include "vertexbuffer.h"
@@ -18,8 +19,9 @@
 #include <iostream>
 
 struct Object {
-    VertexArray vao;
+    //VertexArray vao;
     Shader shader;
+    Model model;
 };
 
 class Renderer {

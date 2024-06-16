@@ -9,7 +9,7 @@ add_compile_options(-Wall -Wextra)
 if(CMAKE_BUILD_TYPE STREQUAL "debug")
     add_compile_definitions(DEBUG=1)
 else(CMAKE_BUILD_TYPE STREQUAL "release")
-    add_compile_options(-O2 -march=native -flto -pipe)
+    add_compile_options(-O2 -march=native)
 endif()
 
 file(GLOB source CONFIGURE_DEPENDS 
