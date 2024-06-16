@@ -25,9 +25,16 @@ file(GLOB imgui_source CONFIGURE_DEPENDS
 
 add_subdirectory("include/glfw")
 
+set(BUILD_SHARED_LIBS OFF)
+set(ASSIMP_BUILD_TESTS OFF)
+set(ASSIMP_INSTALL OFF)
+set(ASSIMP_INSTALL_PDB OFF)
+set(ASSIMP_WARNINGS_AS_ERRORS OFF)
+add_subdirectory("assimp")
+
 add_executable(graphics-engine ${source} ${imgui_source})
 
 find_package(OpenMP REQUIRED)
 
 target_include_directories(graphics-engine PUBLIC "include/" "imgui/" "imgui/backends/")
-target_link_libraries(graphics-engine PUBLIC dl glfw OpenMP::OpenMP_CXX)
+target_link_libraries(graphics-engine PUBLIC dl glfw OpenMP::OpenMP_CXX assimp)
