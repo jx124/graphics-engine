@@ -7,7 +7,7 @@
 
 class Texture {
 public:
-    Texture(const std::string& image_path, GLenum format);
+    Texture(const std::string& image_path);
 
     GLuint id;
     int width, height, n_channels;

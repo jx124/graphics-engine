@@ -82,16 +82,17 @@ void Renderer::init() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    Texture container_texture("assets/textures/container2.png", GL_RGBA);
-    Texture specular_map("assets/textures/container2_specular.png", GL_RGBA);
+    Texture container_texture("assets/textures/container2.png");
+    Texture specular_map("assets/textures/container2_specular.png");
 
     shader.use();
 
     glm::vec3 light_pos(1.2f, 1.0f, 2.0f);
-    shader.set("lightPos", light_pos);
+    glm::vec3 light_dir(-0.2f, -1.0f, -0.3f);
 
     shader.set("material.diffuse", container_texture.index);
     shader.set("material.specular", specular_map.index);
+    shader.set("light.direction", light_dir);
 
     objects.push_back({VAO, shader});
 
@@ -170,7 +171,6 @@ void Renderer::render() {
         object.shader.set("projection", projection);
 
         if (j == 0) {
-            object.shader.set("textureMix", window->state.mix);
             for (int i = 0; i < 10; i++) {
                 float angle = 20.0f * i + 50.0f * glfwGetTime();
 

@@ -3,13 +3,23 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-Texture::Texture(const std::string& image_path, GLenum format) : index(num_textures) {
+Texture::Texture(const std::string& image_path) : index(num_textures) {
     glGenTextures(1, &this->id);
     glActiveTexture(GL_TEXTURE0 + num_textures++);
     glBindTexture(GL_TEXTURE_2D, this->id);
     
     stbi_set_flip_vertically_on_load(true);
     unsigned char* data = stbi_load(image_path.c_str(), &this->width, &this->height, &this->n_channels, 0);
+
+    GLenum format;
+    switch (n_channels) {
+    case 1:
+        format = GL_RED; break;
+    case 3:
+        format = GL_RGB; break;
+    case 4: default:
+        format = GL_RGBA; break;
+    }
 
     if (data) {
         // generate a texture for the currently bound texture
