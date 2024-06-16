@@ -34,14 +34,20 @@ struct WindowState {
     int last_x;
     int last_y;
 
-    float light_brightness = 5.0f;
-    glm::vec3 light_ambient = {0.2f, 0.2f, 0.2f};
-    glm::vec3 light_diffuse = {0.5f, 0.5f, 0.5f};
-    glm::vec3 light_specular = {1.0f, 1.0f, 1.0f};
+    glm::vec3 dirlight_ambient = {0.05f, 0.05f, 0.05f};
+    glm::vec3 dirlight_diffuse = {0.4f, 0.4f, 0.4f};
+    glm::vec3 dirlight_specular = {0.5f, 0.5f, 0.5f};
 
-    glm::vec3 ambient = {1.0f, 0.5f, 0.31f};
-    glm::vec3 diffuse = {1.0f, 0.5f, 0.31f};
-    glm::vec3 specular = {0.5f, 0.5f, 0.5f};
+    glm::vec3 pointlight_ambient = {0.05f, 0.05f, 0.05f};
+    glm::vec3 pointlight_diffuse = {0.8f, 0.8f, 0.8f};
+    glm::vec3 pointlight_specular = {1.0f, 1.0f, 1.0f};
+
+    glm::vec3 spotlight_ambient = {0.0f, 0.0f, 0.0f};
+    glm::vec3 spotlight_diffuse = {1.0f, 1.0f, 1.0f};
+    glm::vec3 spotlight_specular = {1.0f, 1.0f, 1.0f};
+    float cutoff = 12.5f;
+    float outer_cutoff = 17.5f;
+
     float shininess = 32.0f;
 };
 

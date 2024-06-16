@@ -2,7 +2,7 @@
 #include "renderer.h"
 
 int main(void) {
-    Window window(800, 600, "Graphics Engine");
+    Window window(1920, 1080, "Graphics Engine");
     Renderer renderer(&window);
 
     renderer.init();

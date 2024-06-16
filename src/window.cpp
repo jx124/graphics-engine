@@ -48,10 +48,6 @@ void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height
 }
 
 void Window::process_input() {
-    // Close window
-    if (glfwGetKey(this->ptr, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        glfwSetWindowShouldClose(this->ptr, true);
-    }
     // Enable wireframe
     if (glfwGetKey(this->ptr, GLFW_KEY_TAB) == GLFW_PRESS && this->state.tab_key_released) {
         this->state.tab_key_released = false;
