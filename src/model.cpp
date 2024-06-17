@@ -7,17 +7,15 @@ void Model::draw(const Shader& shader) {
 }
 
 void Model::load_model(std::string path) {
-    std::cout << "[Assimp] Importing model..." << std::endl;
-
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-        std::cerr << "[Assimp] Error importing model: " << importer.GetErrorString() << std::endl;
+        std::cerr << "Error importing model: " << importer.GetErrorString() << std::endl;
         return;
     }
 
-    std::cout << "[Assimp] Imported model " << path << std::endl;
+    std::cout << "Imported model " << path << std::endl;
 
     this->directory = path.substr(0, path.find_last_of('/'));
 
@@ -26,14 +24,12 @@ void Model::load_model(std::string path) {
     this->process_node(scene->mRootNode, scene);
 
     auto end = std::chrono::high_resolution_clock::now();
-    std::cout << "[Assimp] Processing all nodes took " 
+    std::cout << "Processing all nodes took " 
         << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
         << " ms" << std::endl;
 }
 
 void Model::process_node(aiNode* node, const aiScene* scene) {
-    std::cout << "[Assimp] Processing node " << node->mName.C_Str() << std::endl;
-
     // process node's meshes first
     for (unsigned int i = 0; i < node->mNumMeshes; i++) {
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
@@ -84,55 +80,57 @@ Mesh Model::process_mesh(aiMesh* mesh, const aiScene* scene) {
     // process material
     aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-    std::vector<Texture> diffuse_maps = load_material_textures(material, aiTextureType_DIFFUSE, "texture_diffuse");
-    textures.insert(textures.end(),
-            std::make_move_iterator(diffuse_maps.begin()),
-            std::make_move_iterator(diffuse_maps.end()));
+    // collect all material types for loading
+    std::vector<MaterialType> material_types;
+    material_types.push_back({material, aiTextureType_DIFFUSE, "texture_diffuse"});
+    material_types.push_back({material, aiTextureType_SPECULAR, "texture_specular"});
+    material_types.push_back({material, aiTextureType_HEIGHT, "texture_normal"});
+    material_types.push_back({material, aiTextureType_AMBIENT, "texture_height"});
 
-    std::vector<Texture> specular_maps = load_material_textures(material, aiTextureType_SPECULAR, "texture_specular");
-    textures.insert(textures.end(),
-            std::make_move_iterator(specular_maps.begin()),
-            std::make_move_iterator(specular_maps.end()));
-
-    std::vector<Texture> normal_maps = load_material_textures(material, aiTextureType_HEIGHT, "texture_normal");
-    textures.insert(textures.end(),
-            std::make_move_iterator(normal_maps.begin()),
-            std::make_move_iterator(normal_maps.end()));
-
-    std::vector<Texture> height_maps = load_material_textures(material, aiTextureType_AMBIENT, "texture_height");
-    textures.insert(textures.end(),
-            std::make_move_iterator(height_maps.begin()),
-            std::make_move_iterator(height_maps.end()));
+    std::vector<Texture> texture_maps = load_material_textures(material_types);
+    textures.insert(textures.end(), texture_maps.begin(), texture_maps.end());
 
     return Mesh(vertices, indices, textures);
 }
 
-std::vector<Texture> Model::load_material_textures(aiMaterial* mat, aiTextureType type, std::string type_name) {
+std::vector<Texture> Model::load_material_textures(const std::vector<MaterialType>& material_types) {
     std::vector<Texture> textures;
+    std::vector<std::string> unloaded_textures, unloaded_types, unloaded_paths;
 
-    for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
-        aiString str;
-        mat->GetTexture(type, i, &str); // retrieve texture file location
-        bool skip = false;
+    for (const auto& [material, type, type_name] : material_types) {
+        // get all textures associated with current material
+        for (unsigned int i = 0; i < material->GetTextureCount(type); i++) {
+            aiString texture_path;
+            material->GetTexture(type, i, &texture_path); // retrieve texture file location
+            bool skip = false;
 
-        for (size_t j = 0; j < this->loaded_textures.size(); j++) {
-            // TODO: check if unordered_map is faster
-            if (std::strcmp(this->loaded_textures[i].path.data(), str.C_Str()) == 0) {
-                textures.push_back(this->loaded_textures[j]);
-                skip = true;
-                break;
+            for (size_t j = 0; j < this->loaded_textures.size(); j++) {
+                // check if texture already loaded
+                if (std::strcmp(this->loaded_textures[j].path.data(), texture_path.C_Str()) == 0) {
+                    textures.push_back(this->loaded_textures[j]);
+                    skip = true;
+                    break;
+                }
+            }
+
+            // if texture not loaded, add to pool of unloaded textures
+            if (!skip) {
+                unloaded_textures.emplace_back(this->directory + "/" + texture_path.C_Str());
+                unloaded_types.push_back(type_name);
+                unloaded_paths.emplace_back(texture_path.C_Str());
             }
         }
-        
-        if (!skip) {
-            Texture texture(this->directory + "/" + str.C_Str());
-            texture.type = type_name;
-            texture.path = str.C_Str();
-
-            textures.push_back(texture);
-            this->loaded_textures.push_back(texture);
-        }
     }
+
+    // load all unloaded textures together asynchronously for speed up
+    std::vector<Texture> new_textures = Texture::LoadTextures(unloaded_textures);
+    for (size_t i = 0; i < new_textures.size(); i++) {
+        new_textures[i].type = unloaded_types[i];
+        new_textures[i].path = unloaded_paths[i];
+    }
+
+    textures.insert(textures.end(), new_textures.begin(), new_textures.end());
+    this->loaded_textures.insert(this->loaded_textures.end(), new_textures.begin(), new_textures.end());
 
     return textures;
 }

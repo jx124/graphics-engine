@@ -4,10 +4,22 @@
 
 #include <string>
 #include <iostream>
+#include <vector>
+#include <future>
+#include <thread>
+
+struct ImageData {
+    unsigned char* data;
+    int width, height, n_channels;
+    std::string path;
+};
 
 class Texture {
 public:
     Texture(const std::string& image_path);
+    Texture(const ImageData& image_data);
+
+    static std::vector<Texture> LoadTextures(std::vector<std::string> image_paths);
 
     GLuint id;
     int width, height, n_channels;
