@@ -1,5 +1,4 @@
 #include "mesh.h"
-#include "vertexarray.h"
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices, std::vector<Texture> textures) {
     // TODO: should the constructor arguments be passed by value?
@@ -34,6 +33,8 @@ void Mesh::setup_mesh() {
 void Mesh::draw(const Shader& shader) {
     GLuint n_diffuse = 1;
     GLuint n_specular = 1;
+    GLuint n_normal = 1;
+    GLuint n_height = 1;
 
     for (size_t i = 0; i < this->textures.size(); i++) {
         glActiveTexture(GL_TEXTURE0 + i);
@@ -44,6 +45,10 @@ void Mesh::draw(const Shader& shader) {
             number = std::to_string(n_diffuse++);
         } else if (name == "texture_specular") {
             number = std::to_string(n_specular++);
+        } else if (name == "texture_normal") {
+            number = std::to_string(n_normal++);
+        } else if (name == "texture_height") {
+            number = std::to_string(n_height++);
         }
 
         shader.set(name + number, static_cast<int>(i));

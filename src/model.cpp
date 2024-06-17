@@ -1,5 +1,4 @@
 #include "model.h"
-#include "texture.h"
 
 void Model::draw(const Shader& shader) {
     for (size_t i = 0; i < this->meshes.size(); i++) {
@@ -22,7 +21,14 @@ void Model::load_model(std::string path) {
 
     this->directory = path.substr(0, path.find_last_of('/'));
 
+    auto start = std::chrono::high_resolution_clock::now();
+
     this->process_node(scene->mRootNode, scene);
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::cout << "[Assimp] Processing all nodes took " 
+        << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+        << " ms" << std::endl;
 }
 
 void Model::process_node(aiNode* node, const aiScene* scene) {
@@ -45,6 +51,8 @@ Mesh Model::process_mesh(aiMesh* mesh, const aiScene* scene) {
     std::vector<GLuint> indices;
     std::vector<Texture> textures;
 
+    vertices.reserve(mesh->mNumVertices);
+
     // process vertex positions, normals, and texture coordinates
     for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
         Vertex vertex;
@@ -59,8 +67,9 @@ Mesh Model::process_mesh(aiMesh* mesh, const aiScene* scene) {
             vertex.tex_coords = { 0.0f, 0.0f };
         }
 
-        vertices.push_back(vertex);
+        vertices.push_back(std::move(vertex));
     }
+    indices.reserve(mesh->mNumFaces * 3);
 
     // process indices
     for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
@@ -73,15 +82,27 @@ Mesh Model::process_mesh(aiMesh* mesh, const aiScene* scene) {
     }
 
     // process material
-    if (mesh->mMaterialIndex >= 0) {
-        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-        
-        std::vector<Texture> diffuse_maps = load_material_textures(material, aiTextureType_DIFFUSE, "texture_diffuse");
-        textures.insert(textures.end(), diffuse_maps.begin(), diffuse_maps.end());
-        
-        std::vector<Texture> specular_maps = load_material_textures(material, aiTextureType_SPECULAR, "texture_specular");
-        textures.insert(textures.end(), specular_maps.begin(), specular_maps.end());
-    }
+    aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+
+    std::vector<Texture> diffuse_maps = load_material_textures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+    textures.insert(textures.end(),
+            std::make_move_iterator(diffuse_maps.begin()),
+            std::make_move_iterator(diffuse_maps.end()));
+
+    std::vector<Texture> specular_maps = load_material_textures(material, aiTextureType_SPECULAR, "texture_specular");
+    textures.insert(textures.end(),
+            std::make_move_iterator(specular_maps.begin()),
+            std::make_move_iterator(specular_maps.end()));
+
+    std::vector<Texture> normal_maps = load_material_textures(material, aiTextureType_HEIGHT, "texture_normal");
+    textures.insert(textures.end(),
+            std::make_move_iterator(normal_maps.begin()),
+            std::make_move_iterator(normal_maps.end()));
+
+    std::vector<Texture> height_maps = load_material_textures(material, aiTextureType_AMBIENT, "texture_height");
+    textures.insert(textures.end(),
+            std::make_move_iterator(height_maps.begin()),
+            std::make_move_iterator(height_maps.end()));
 
     return Mesh(vertices, indices, textures);
 }
