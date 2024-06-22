@@ -18,8 +18,7 @@
 
 #include <iostream>
 
-struct Object {
-    //VertexArray vao;
+struct ModelObject {
     Shader shader;
     Model model;
 };
@@ -35,5 +34,5 @@ public:
 
 private:
     Window* window;
-    std::vector<Object> objects{};
+    std::vector<ModelObject> model_objects;
 };
