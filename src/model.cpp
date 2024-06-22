@@ -123,7 +123,7 @@ std::vector<Texture> Model::load_material_textures(const std::vector<MaterialTyp
     }
 
     // load all unloaded textures together asynchronously for speed up
-    std::vector<Texture> new_textures = Texture::LoadTextures(unloaded_textures);
+    std::vector<Texture> new_textures = Texture::load_textures(unloaded_textures);
     for (size_t i = 0; i < new_textures.size(); i++) {
         new_textures[i].type = unloaded_types[i];
         new_textures[i].path = unloaded_paths[i];

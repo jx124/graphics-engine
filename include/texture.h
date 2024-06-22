@@ -19,7 +19,7 @@ public:
     Texture(const std::string& image_path);
     Texture(const ImageData& image_data);
 
-    static std::vector<Texture> LoadTextures(std::vector<std::string> image_paths);
+    static std::vector<Texture> load_textures(std::vector<std::string> image_paths);
 
     GLuint id;
     int width, height, n_channels;

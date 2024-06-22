@@ -61,7 +61,7 @@ Texture::Texture(const ImageData& image_data) : index(num_textures) {
     }
 }
 
-std::vector<Texture> Texture::LoadTextures(std::vector<std::string> image_paths) {
+std::vector<Texture> Texture::load_textures(std::vector<std::string> image_paths) {
     size_t length = image_paths.size();
     std::vector<std::future<ImageData>> images(length);
     stbi_set_flip_vertically_on_load(true);
@@ -70,7 +70,7 @@ std::vector<Texture> Texture::LoadTextures(std::vector<std::string> image_paths)
     for (size_t i = 0; i < length; i++) {
         const std::string& image_path = image_paths[i];
 
-        images[i] = std::async(std::launch::async, [&image_path](){
+        images[i] = std::async(std::launch::async, [image_path](){
             std::cout << "Loading " << image_path <<  std::endl;
             ImageData image;
             unsigned char* data = stbi_load(image_path.c_str(), &image.width, &image.height, &image.n_channels, 0);

@@ -37,7 +37,7 @@ void Mesh::draw(const Shader& shader) {
     GLuint n_height = 1;
 
     for (size_t i = 0; i < this->textures.size(); i++) {
-        glActiveTexture(GL_TEXTURE0 + i);
+        glActiveTexture(GL_TEXTURE0 + this->textures[i].index);
 
         std::string number;
         std::string name = textures[i].type;
