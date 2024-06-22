@@ -7,6 +7,7 @@ void Model::draw(const Shader& shader) {
 }
 
 void Model::load_model(std::string path) {
+    // import assimp model
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
 
@@ -16,15 +17,14 @@ void Model::load_model(std::string path) {
     }
 
     std::cout << "Imported model " << path << std::endl;
-
     this->directory = path.substr(0, path.find_last_of('/'));
 
+    // recursively process model from root node
     auto start = std::chrono::high_resolution_clock::now();
-
     this->process_node(scene->mRootNode, scene);
-
     auto end = std::chrono::high_resolution_clock::now();
-    std::cout << "Processing all nodes took " 
+
+    std::cout << "Processing " << path << " took " 
         << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
         << " ms" << std::endl;
 }

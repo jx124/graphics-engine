@@ -25,6 +25,8 @@ public:
     Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices, std::vector<Texture> textures);
     void draw(const Shader& shader);
 
+    static Mesh generate_cube_mesh();
+
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
     std::vector<Texture> textures;

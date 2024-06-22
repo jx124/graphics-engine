@@ -19,7 +19,9 @@ struct MaterialType {
 
 class Model {
 public:
+    Model() = default;
     Model(std::string path) { load_model(path); }
+    void add_mesh(Mesh mesh) { this->meshes.push_back(std::move(mesh)); };
     void draw(const Shader& shader);
 
 private:
