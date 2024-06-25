@@ -19,12 +19,21 @@ public:
     Texture(const std::string& image_path);
     Texture(const ImageData& image_data);
 
+    enum class Type {
+        Diffuse,
+        Specular,
+        Normal,
+        Height
+    };
+
+    void set_type(Texture::Type type);
+
     static std::vector<Texture> load_textures(std::vector<std::string> image_paths);
 
     GLuint id;
     int width, height, n_channels;
-    int index; // for setting shader uniforms
+    int index; // active shader slot for setting shader uniforms
     static inline int num_textures = 0;
-    std::string type; // diffuse or specular, TODO: use enum
+    std::string type;
     std::string path;
 };

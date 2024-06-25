@@ -61,6 +61,23 @@ Texture::Texture(const ImageData& image_data) : index(num_textures) {
     }
 }
 
+void Texture::set_type(Texture::Type type) {
+    switch (type) {
+    case Texture::Type::Diffuse: default:
+        this->type = "texture_diffuse";
+        break;
+    case Texture::Type::Specular:
+        this->type = "texture_specular";
+        break;
+    case Texture::Type::Normal:
+        this->type = "texture_normal";
+        break;
+    case Texture::Type::Height:
+        this->type = "texture_height";
+        break;
+    }
+}
+
 std::vector<Texture> Texture::load_textures(std::vector<std::string> image_paths) {
     size_t length = image_paths.size();
     std::vector<std::future<ImageData>> images(length);
