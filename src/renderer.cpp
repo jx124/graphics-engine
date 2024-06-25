@@ -10,11 +10,41 @@ Renderer::Renderer(Window* window) {
 }
 
 void Renderer::init() {
-    // backpack model
-    Shader shader("assets/shaders/model_vertex.glsl", "assets/shaders/model_fragment.glsl");
-    Model bag_model("assets/models/backpack/backpack.obj");
+    glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS); 
 
-    this->model_objects.push_back({shader, bag_model});
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Create a plane model and its associated shader
+    Model plane_model;
+    Shader plane_shader("assets/shaders/model_vertex.glsl", "assets/shaders/model_fragment.glsl");
+
+    // Generate the mesh data for the plane, scaling its texture coordinates to tile the texture
+    MeshData plane_mesh = Mesh::generate_plane_mesh();
+    for (auto& vertex : plane_mesh.vertices) {
+        vertex.tex_coords *= 2.0f;
+    }
+
+    // Create a texture and add it to the mesh
+    Texture metal_texture("assets/textures/metal.png");
+    metal_texture.set_type(Texture::Type::Diffuse);
+    plane_mesh.textures.push_back(metal_texture);
+
+    // Add the mesh to the model
+    plane_model.add_mesh(Mesh(plane_mesh));
+
+    // Add the model and shader to the list of models to be rendered
+    this->model_objects.push_back({plane_shader, plane_model});
+
+    // Add the transforms to apply to the plane model
+    glm::mat4 plane_transform(1.0f);
+    plane_transform = glm::translate(plane_transform, glm::vec3(0.0f, -0.5f, 0.0f));
+    plane_transform = glm::scale(plane_transform, glm::vec3(5.0f));
+    this->transforms.push_back(std::move(plane_transform));
 
     // container model
     Shader container_shader("assets/shaders/vertex.glsl", "assets/shaders/box_fragment.glsl");
@@ -26,9 +56,46 @@ void Renderer::init() {
     container_shader.set("material.diffuse", container_texture.index);
     container_shader.set("material.specular", specular_map.index);
 
+    Model container_model;
+    MeshData container_mesh = Mesh::generate_cube_mesh();
+    container_model.add_mesh(Mesh(container_mesh));
+
+    this->model_objects.push_back({container_shader, container_model});
+
+    glm::mat4 container_transform(1.0f);
+
+    this->transforms.push_back(std::move(container_transform));
+
+    // Create a cube model and its associated shader
     Model cube_model;
-    cube_model.add_mesh(Mesh::generate_cube_mesh());
-    this->model_objects.push_back({container_shader, cube_model});
+    Shader cube_shader("assets/shaders/model_vertex.glsl", "assets/shaders/model_fragment.glsl");
+
+    // Generate the mesh data for the cube
+    MeshData cube_mesh = Mesh::generate_cube_mesh();
+
+    // Create a texture and add it to the mesh
+    Texture marble_texture("assets/textures/marble.jpg");
+    marble_texture.set_type(Texture::Type::Diffuse);
+    cube_mesh.textures.push_back(marble_texture);
+
+    // Add the mesh to the model
+    cube_model.add_mesh(Mesh(cube_mesh));
+
+    // Add the model and shader to the list of models to be rendered
+    this->model_objects.push_back({cube_shader, cube_model});
+
+    // Add the transforms to apply to the cube model
+    glm::mat4 cube_transform(1.0f);
+    cube_transform = glm::translate(cube_transform, glm::vec3(-1.0f, 0.0f, -1.0f));
+    this->transforms.push_back(std::move(cube_transform));
+
+    // Add the second cube
+    this->model_objects.push_back({cube_shader, cube_model});
+
+    // Add the transforms to apply to the second cube model
+    cube_transform = glm::mat4(1.0f);
+    cube_transform = glm::translate(cube_transform, glm::vec3(2.0f, 0.0f, 0.0f));
+    this->transforms.push_back(std::move(cube_transform));
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -98,13 +165,7 @@ void Renderer::update() {
 }
 
 void Renderer::render() {
-    glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
-
-    glm::mat4 model(1.0f);
-    model = glm::translate(model, glm::vec3(1.0f));
-    model = glm::scale(model, glm::vec3(1.0f));
 
     glm::mat4 view = glm::lookAt(window->state.camera_pos,
                                  window->state.camera_pos + window->state.camera_front,
@@ -114,9 +175,11 @@ void Renderer::render() {
     float aspect_ratio = static_cast<float>(window->width) / window->height;
     projection = glm::perspective(glm::radians(window->state.fov), aspect_ratio, 0.1f, 100.0f);
 
-    for (auto& object : this->model_objects) {
+    for (size_t i = 0; i < this->model_objects.size(); i++) {
+        auto& object = this->model_objects[i];
+
         object.shader.use();
-        object.shader.set("model", model);
+        object.shader.set("model", this->transforms[i]);
         object.shader.set("view", view);
         object.shader.set("projection", projection);
 
@@ -147,6 +210,10 @@ void Renderer::render_ui() {
                     window->state.camera_front.x,
                     window->state.camera_front.y,
                     window->state.camera_front.z);
+        ImGui::Text("Camera Position: (%.3f, %.3f, %.3f)",
+                    window->state.camera_pos.x,
+                    window->state.camera_pos.y,
+                    window->state.camera_pos.z);
 
         ImGui::SeparatorText("Settings");
         ImGui::Text("Camera Speed");

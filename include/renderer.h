@@ -35,4 +35,5 @@ public:
 private:
     Window* window;
     std::vector<ModelObject> model_objects;
+    std::vector<glm::mat4> transforms;
 };
