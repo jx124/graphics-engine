@@ -9,6 +9,8 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices, std::vecto
     setup_mesh();
 }
 
+Mesh::Mesh(const MeshData& mesh_data) : Mesh(mesh_data.vertices, mesh_data.indices, mesh_data.textures) {}
+
 void Mesh::setup_mesh() {
     this->VAO.bind();
     this->VBO.bind();
@@ -37,7 +39,7 @@ void Mesh::draw(const Shader& shader) {
     GLuint n_height = 1;
 
     for (size_t i = 0; i < this->textures.size(); i++) {
-        glActiveTexture(GL_TEXTURE0 + this->textures[i].index);
+        glActiveTexture(GL_TEXTURE0 + i);
 
         std::string number;
         std::string name = textures[i].type;
@@ -54,13 +56,14 @@ void Mesh::draw(const Shader& shader) {
         shader.set(name + number, static_cast<int>(i));
         glBindTexture(GL_TEXTURE_2D, this->textures[i].id);
     }
+    glActiveTexture(GL_TEXTURE0);
 
     // draw mesh
     this->VAO.bind();
     glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
 }
 
-Mesh Mesh::generate_cube_mesh() {
+MeshData Mesh::generate_cube_mesh() {
     constexpr float cube_values[] = {
         // vertex position,  vertex normal,       tex coords
        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
@@ -117,5 +120,32 @@ Mesh Mesh::generate_cube_mesh() {
         });
         indices.push_back(i);
     }
-    return Mesh(vertices, indices, {});
+    return {vertices, indices, {}};
+}
+
+MeshData Mesh::generate_plane_mesh() {
+    // generates a 1x1 xz-plane centered at the origin
+
+    constexpr float plane_values[] = {
+        // vertex position,  vertex normal,       tex coords
+       -0.5f, 0.0f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+        0.5f, 0.0f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  1.0f,
+        0.5f, 0.0f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+        0.5f, 0.0f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+       -0.5f, 0.0f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  0.0f,
+       -0.5f, 0.0f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f,  1.0f,
+    };
+
+    std::vector<Vertex> vertices;
+    std::vector<GLuint> indices;
+
+    for (unsigned int i = 0; i < 6; i++) {
+        vertices.push_back({
+            glm::vec3(plane_values[8 * i + 0], plane_values[8 * i + 1], plane_values[8 * i + 2]),
+            glm::vec3(plane_values[8 * i + 3], plane_values[8 * i + 4], plane_values[8 * i + 5]),
+            glm::vec2(plane_values[8 * i + 6], plane_values[8 * i + 7])
+        });
+        indices.push_back(i);
+    }
+    return {vertices, indices, {}};
 }
