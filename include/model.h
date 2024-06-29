@@ -22,7 +22,7 @@ public:
     Model() = default;
     Model(std::string path) { load_model(path); }
     void add_mesh(Mesh mesh) { this->meshes.push_back(std::move(mesh)); };
-    void draw(const Shader& shader);
+    void draw(const Shader& shader) const;
 
 private:
     void load_model(std::string path);

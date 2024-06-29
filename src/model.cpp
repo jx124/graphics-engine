@@ -1,6 +1,6 @@
 #include "model.h"
 
-void Model::draw(const Shader& shader) {
+void Model::draw(const Shader& shader) const {
     for (size_t i = 0; i < this->meshes.size(); i++) {
         this->meshes[i].draw(shader);
     }

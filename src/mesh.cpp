@@ -32,7 +32,7 @@ void Mesh::setup_mesh() {
     glEnableVertexAttribArray(2);
 }
 
-void Mesh::draw(const Shader& shader) {
+void Mesh::draw(const Shader& shader) const {
     GLuint n_diffuse = 1;
     GLuint n_specular = 1;
     GLuint n_normal = 1;

@@ -17,11 +17,15 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <iostream>
+#include <map>
 
-struct ModelObject {
-    Shader shader;
-    Model model;
+struct Entity {
+    size_t shader_id;
+    size_t model_id;
+    size_t transform_id;
 };
+
+using Transform = glm::mat4;
 
 class Renderer {
 public:
@@ -34,6 +38,10 @@ public:
 
 private:
     Window* window;
-    std::vector<ModelObject> model_objects;
-    std::vector<glm::mat4> transforms;
+    std::vector<Shader> shaders;
+    std::vector<Model> models;
+    std::vector<Transform> transforms;
+
+    std::vector<Entity> entities;
+    std::map<float, Entity> transparent_entities; // sorted map with key = distance
 };

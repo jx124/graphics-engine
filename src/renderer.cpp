@@ -13,15 +13,30 @@ void Renderer::init() {
     glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // SHADERS
 
-    // Create a plane model and its associated shader
+    Shader model_shader("assets/shaders/model_vertex.glsl", "assets/shaders/model_fragment.glsl");
+    this->shaders.push_back(std::move(model_shader));
+
+    Shader container_shader("assets/shaders/vertex.glsl", "assets/shaders/box_fragment.glsl");
+
+    Texture container_texture("assets/textures/container2.png");
+    Texture specular_map("assets/textures/container2_specular.png");
+
+    container_shader.use();
+    container_shader.set("material.diffuse", container_texture.unit);
+    container_shader.set("material.specular", specular_map.unit);
+    this->shaders.push_back(std::move(container_shader));
+
+    Shader outline_shader("assets/shaders/model_vertex.glsl", "assets/shaders/light_fragment.glsl");
+    this->shaders.push_back(std::move(outline_shader));
+
+    // MODELS
+
     Model plane_model;
-    Shader plane_shader("assets/shaders/model_vertex.glsl", "assets/shaders/model_fragment.glsl");
 
     // Generate the mesh data for the plane, scaling its texture coordinates to tile the texture
     MeshData plane_mesh = Mesh::generate_plane_mesh();
@@ -37,75 +52,80 @@ void Renderer::init() {
     // Add the mesh to the model
     plane_model.add_mesh(Mesh(plane_mesh));
 
-    // Add the model and shader to the list of models to be rendered
-    this->model_objects.push_back({plane_shader, plane_model});
-
-    // Add the transforms to apply to the plane model
-    glm::mat4 plane_transform(1.0f);
-    plane_transform = glm::translate(plane_transform, glm::vec3(0.0f, -0.5f, 0.0f));
-    plane_transform = glm::scale(plane_transform, glm::vec3(5.0f));
-    this->transforms.push_back(std::move(plane_transform));
-
-    // container model
-    Shader container_shader("assets/shaders/vertex.glsl", "assets/shaders/box_fragment.glsl");
-
-    Texture container_texture("assets/textures/container2.png");
-    Texture specular_map("assets/textures/container2_specular.png");
-
-    container_shader.use();
-    container_shader.set("material.diffuse", container_texture.unit);
-    container_shader.set("material.specular", specular_map.unit);
-
     Model container_model;
     MeshData container_mesh = Mesh::generate_cube_mesh();
     container_model.add_mesh(Mesh(container_mesh));
 
-    this->model_objects.push_back({container_shader, container_model});
+    Model grass_model;
+    MeshData grass_mesh = Mesh::generate_plane_mesh();
 
-    glm::mat4 container_transform(1.0f);
+    Texture grass_texture("assets/textures/grass.png");
+    grass_texture.set_type(Texture::Type::Diffuse);
+    grass_mesh.textures.push_back(grass_texture);
+    
+    grass_model.add_mesh(grass_mesh);
 
-    this->transforms.push_back(std::move(container_transform));
-
-    // Create a cube model and its associated shader
     Model cube_model;
-    Shader cube_shader("assets/shaders/model_vertex.glsl", "assets/shaders/model_fragment.glsl");
-
-    // Generate the mesh data for the cube
     MeshData cube_mesh = Mesh::generate_cube_mesh();
 
-    // Create a texture and add it to the mesh
     Texture marble_texture("assets/textures/marble.jpg");
     marble_texture.set_type(Texture::Type::Diffuse);
     cube_mesh.textures.push_back(marble_texture);
 
-    // Add the mesh to the model
     cube_model.add_mesh(Mesh(cube_mesh));
+    
+    this->models.push_back(std::move(plane_model));
+    this->models.push_back(std::move(container_model));
+    this->models.push_back(std::move(grass_model));
+    this->models.push_back(std::move(cube_model));
 
-    // Add the model and shader to the list of models to be rendered
-    this->model_objects.push_back({cube_shader, cube_model});
+    // TRANSFORMS
 
-    // Add the transforms to apply to the cube model
-    glm::mat4 cube1_transform(1.0f);
+    Transform plane_transform(1.0f);
+    plane_transform = glm::translate(plane_transform, glm::vec3(0.0f, -0.5f, 0.0f));
+    plane_transform = glm::scale(plane_transform, glm::vec3(5.0f));
+    this->transforms.push_back(std::move(plane_transform));
+
+    Transform container_transform(1.0f);
+    this->transforms.push_back(std::move(container_transform));
+
+    Transform grass_transform(1.0f);
+    grass_transform = glm::translate(grass_transform, glm::vec3(-1.0f, 0.0f, 2.0f));
+    grass_transform = glm::rotate(grass_transform, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    this->transforms.push_back(std::move(grass_transform));
+
+    Transform cube1_transform(1.0f);
     cube1_transform = glm::translate(cube1_transform, glm::vec3(-1.0f, 0.0f, -1.0f));
     this->transforms.push_back(cube1_transform);
 
-    // Add the second cube
-    this->model_objects.push_back({cube_shader, cube_model});
-
-    // Add the transforms to apply to the second cube model
-    glm::mat4 cube2_transform(1.0f);
+    Transform cube2_transform(1.0f);
     cube2_transform = glm::translate(cube2_transform, glm::vec3(2.0f, 0.0f, 0.0f));
     this->transforms.push_back(cube2_transform);
 
-    // Add upscaled cubes for stencil drawing
-    Shader outline_shader("assets/shaders/model_vertex.glsl", "assets/shaders/light_fragment.glsl");
+    // scaled cube transforms for outline
     cube1_transform = glm::scale(cube1_transform, glm::vec3(1.01f));
     cube2_transform = glm::scale(cube2_transform, glm::vec3(1.01f));
+    this->transforms.push_back(std::move(cube1_transform));
+    this->transforms.push_back(std::move(cube2_transform));
 
-    this->model_objects.push_back({outline_shader, cube_model});
-    this->model_objects.push_back({outline_shader, cube_model});
-    this->transforms.push_back(cube1_transform);
-    this->transforms.push_back(cube2_transform);
+    // ENTITIES
+
+    // Add plane
+    this->entities.push_back({0, 0, 0});
+
+    // Add container
+    this->entities.push_back({1, 1, 1});
+    
+    // Add grass
+    this->entities.push_back({0, 2, 2});
+
+    // Add two marble cubes
+    this->entities.push_back({0, 3, 3});
+    this->entities.push_back({0, 3, 4});
+
+    // Add upscaled cubes for stencil drawing
+    this->entities.push_back({2, 3, 5});
+    this->entities.push_back({2, 3, 6});
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -136,42 +156,42 @@ void Renderer::update() {
        glm::vec3( 0.0f,  0.0f, -3.0f)
     };
 
-    auto& object = this->model_objects[1];
-    object.shader.use();
+    const Shader& container_shader = this->shaders[1];
+    container_shader.use();
 
-    object.shader.set("material.shininess", window->state.shininess);
+    container_shader.set("material.shininess", window->state.shininess);
 
     // directional lights
     glm::vec3 light_dir(-0.2f, -1.0f, -0.3f);
-    object.shader.set("dirLight.direction", light_dir);
-    object.shader.set("dirLight.ambient", window->state.dirlight_ambient);
-    object.shader.set("dirLight.diffuse", window->state.dirlight_diffuse);
-    object.shader.set("dirLight.specular", window->state.dirlight_specular);
-    object.shader.set("viewPos", window->state.camera_pos);
+    container_shader.set("dirLight.direction", light_dir);
+    container_shader.set("dirLight.ambient", window->state.dirlight_ambient);
+    container_shader.set("dirLight.diffuse", window->state.dirlight_diffuse);
+    container_shader.set("dirLight.specular", window->state.dirlight_specular);
+    container_shader.set("viewPos", window->state.camera_pos);
 
     // point lights
     for (int i = 0; i < 4; i++) {
         std::string pointLight = "pointLights[" + std::to_string(i) + "]";
-        object.shader.set(pointLight + ".position", pointLightPositions[i]);
-        object.shader.set(pointLight + ".ambient", window->state.pointlight_ambient);
-        object.shader.set(pointLight + ".diffuse", window->state.pointlight_diffuse);
-        object.shader.set(pointLight + ".specular", window->state.pointlight_specular);
-        object.shader.set(pointLight + ".constant", 1.0f);
-        object.shader.set(pointLight + ".linear", 0.09f);
-        object.shader.set(pointLight + ".quadratic", 0.032f);
+        container_shader.set(pointLight + ".position", pointLightPositions[i]);
+        container_shader.set(pointLight + ".ambient", window->state.pointlight_ambient);
+        container_shader.set(pointLight + ".diffuse", window->state.pointlight_diffuse);
+        container_shader.set(pointLight + ".specular", window->state.pointlight_specular);
+        container_shader.set(pointLight + ".constant", 1.0f);
+        container_shader.set(pointLight + ".linear", 0.09f);
+        container_shader.set(pointLight + ".quadratic", 0.032f);
     }
 
     // spotlight
-    object.shader.set("spotLight.position", window->state.camera_pos);
-    object.shader.set("spotLight.direction", window->state.camera_front);
-    object.shader.set("spotLight.cutoff", glm::cos(glm::radians(window->state.cutoff)));
-    object.shader.set("spotLight.outerCutoff", glm::cos(glm::radians(window->state.outer_cutoff)));
-    object.shader.set("spotLight.ambient", window->state.spotlight_ambient);
-    object.shader.set("spotLight.diffuse", window->state.spotlight_diffuse);
-    object.shader.set("spotLight.specular", window->state.spotlight_specular);
-    object.shader.set("spotLight.constant", 1.0f);
-    object.shader.set("spotLight.linear", 0.09f);
-    object.shader.set("spotLight.quadratic", 0.032f);
+    container_shader.set("spotLight.position", window->state.camera_pos);
+    container_shader.set("spotLight.direction", window->state.camera_front);
+    container_shader.set("spotLight.cutoff", glm::cos(glm::radians(window->state.cutoff)));
+    container_shader.set("spotLight.outerCutoff", glm::cos(glm::radians(window->state.outer_cutoff)));
+    container_shader.set("spotLight.ambient", window->state.spotlight_ambient);
+    container_shader.set("spotLight.diffuse", window->state.spotlight_diffuse);
+    container_shader.set("spotLight.specular", window->state.spotlight_specular);
+    container_shader.set("spotLight.constant", 1.0f);
+    container_shader.set("spotLight.linear", 0.09f);
+    container_shader.set("spotLight.quadratic", 0.032f);
 }
 
 void Renderer::render() {
@@ -191,28 +211,32 @@ void Renderer::render() {
     float aspect_ratio = static_cast<float>(window->width) / window->height;
     projection = glm::perspective(glm::radians(window->state.fov), aspect_ratio, 0.1f, 100.0f);
 
-    for (size_t i = 0; i < this->model_objects.size(); i++) {
-        auto& object = this->model_objects[i];
+    for (size_t i = 0; i < this->entities.size(); i++) {
+        const Entity& entity = this->entities[i];
+        const Shader& shader = this->shaders[entity.shader_id];
+        const Model& model = this->models[entity.model_id];
+        const Transform& transform = this->transforms[entity.transform_id];
 
         // Write to stencil buffer for the 2 marble cubes
-        if (i == 2) {
+        if (i == 3) {
             glStencilMask(0xFF); // enable writing to stencil buffer
         }
 
         // Draw outlines of the 2 marble cubes
-        if (i == 4) {
+        if (i == 5) {
             glStencilFunc(GL_NOTEQUAL, 1, 0xFF); // only pass fragments not overlapping with cubes
             glStencilMask(0x00); // disable writing to stencil buffer
             glDisable(GL_DEPTH_TEST); // always draw outline regardless of depth
         }
 
-        object.shader.use();
-        object.shader.set("model", this->transforms[i]);
-        object.shader.set("view", view);
-        object.shader.set("projection", projection);
+        shader.use();
+        shader.set("model", transform);
+        shader.set("view", view);
+        shader.set("projection", projection);
 
-        object.model.draw(object.shader);
+        model.draw(shader);
     }
+    glStencilFunc(GL_ALWAYS, 1, 0xFF); // have fragments always pass the stencil test
     glStencilMask(0xFF); // enable writing to stencil buffer so it can be cleared
 }
 

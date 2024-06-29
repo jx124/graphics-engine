@@ -25,6 +25,8 @@ Texture::Texture(const std::string& image_path) : unit(num_textures) {
         // generate a texture for the currently bound texture
         glTexImage2D(GL_TEXTURE_2D, 0, format, this->width, this->height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
     } else {
         std::cerr << "Failed to load image " << image_path << std::endl;
         std::terminate();
@@ -55,6 +57,8 @@ Texture::Texture(const ImageData& image_data) : unit(num_textures) {
         // generate a texture for the currently bound texture
         glTexImage2D(GL_TEXTURE_2D, 0, format, this->width, this->height, 0, format, GL_UNSIGNED_BYTE, image_data.data);
         glGenerateMipmap(GL_TEXTURE_2D);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, format == GL_RGBA ? GL_CLAMP_TO_EDGE : GL_REPEAT);
     } else {
         std::cerr << "Failed to load image " << image_data.path << std::endl;
         std::terminate();

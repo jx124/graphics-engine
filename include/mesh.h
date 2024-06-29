@@ -30,7 +30,7 @@ class Mesh {
 public:
     Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices, std::vector<Texture> textures);
     Mesh(const MeshData& mesh_data);
-    void draw(const Shader& shader);
+    void draw(const Shader& shader) const;
 
     static MeshData generate_cube_mesh();
     static MeshData generate_plane_mesh();
