@@ -223,6 +223,10 @@ void Renderer::render() {
     glStencilFunc(GL_ALWAYS, 1, 0xFF); // have fragments always pass the stencil test
     glStencilMask(0x00); // disable writing to stencil buffer
 
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CW);
+
     glm::mat4 view = glm::lookAt(window->state.camera_pos,
                                  window->state.camera_pos + window->state.camera_front,
                                  window->state.camera_up);
@@ -259,6 +263,7 @@ void Renderer::render() {
     glEnable(GL_DEPTH_TEST);
     glStencilFunc(GL_ALWAYS, 1, 0xFF); // have fragments always pass the stencil test
     glStencilMask(0xFF); // enable writing to stencil buffer so it can be cleared
+    glDisable(GL_CULL_FACE);
 
     for (auto it = this->transparent_entities.rbegin(); it != this->transparent_entities.rend(); it++) {
         const Entity& entity = it->second;
