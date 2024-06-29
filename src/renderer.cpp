@@ -12,7 +12,7 @@ Renderer::Renderer(Window* window) {
 void Renderer::init() {
     glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS); 
+    glEnable(GL_STENCIL_TEST);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -85,17 +85,27 @@ void Renderer::init() {
     this->model_objects.push_back({cube_shader, cube_model});
 
     // Add the transforms to apply to the cube model
-    glm::mat4 cube_transform(1.0f);
-    cube_transform = glm::translate(cube_transform, glm::vec3(-1.0f, 0.0f, -1.0f));
-    this->transforms.push_back(std::move(cube_transform));
+    glm::mat4 cube1_transform(1.0f);
+    cube1_transform = glm::translate(cube1_transform, glm::vec3(-1.0f, 0.0f, -1.0f));
+    this->transforms.push_back(cube1_transform);
 
     // Add the second cube
     this->model_objects.push_back({cube_shader, cube_model});
 
     // Add the transforms to apply to the second cube model
-    cube_transform = glm::mat4(1.0f);
-    cube_transform = glm::translate(cube_transform, glm::vec3(2.0f, 0.0f, 0.0f));
-    this->transforms.push_back(std::move(cube_transform));
+    glm::mat4 cube2_transform(1.0f);
+    cube2_transform = glm::translate(cube2_transform, glm::vec3(2.0f, 0.0f, 0.0f));
+    this->transforms.push_back(cube2_transform);
+
+    // Add upscaled cubes for stencil drawing
+    Shader outline_shader("assets/shaders/model_vertex.glsl", "assets/shaders/light_fragment.glsl");
+    cube1_transform = glm::scale(cube1_transform, glm::vec3(1.01f));
+    cube2_transform = glm::scale(cube2_transform, glm::vec3(1.01f));
+
+    this->model_objects.push_back({outline_shader, cube_model});
+    this->model_objects.push_back({outline_shader, cube_model});
+    this->transforms.push_back(cube1_transform);
+    this->transforms.push_back(cube2_transform);
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -165,7 +175,13 @@ void Renderer::update() {
 }
 
 void Renderer::render() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    // Replace stencil buffer value with 1 (stencil func ref value) when the stencil test passes
+    glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
+    glStencilFunc(GL_ALWAYS, 1, 0xFF); // have fragments always pass the stencil test
+    glStencilMask(0x00); // disable writing to stencil buffer
 
     glm::mat4 view = glm::lookAt(window->state.camera_pos,
                                  window->state.camera_pos + window->state.camera_front,
@@ -178,6 +194,18 @@ void Renderer::render() {
     for (size_t i = 0; i < this->model_objects.size(); i++) {
         auto& object = this->model_objects[i];
 
+        // Write to stencil buffer for the 2 marble cubes
+        if (i == 2) {
+            glStencilMask(0xFF); // enable writing to stencil buffer
+        }
+
+        // Draw outlines of the 2 marble cubes
+        if (i == 4) {
+            glStencilFunc(GL_NOTEQUAL, 1, 0xFF); // only pass fragments not overlapping with cubes
+            glStencilMask(0x00); // disable writing to stencil buffer
+            glDisable(GL_DEPTH_TEST); // always draw outline regardless of depth
+        }
+
         object.shader.use();
         object.shader.set("model", this->transforms[i]);
         object.shader.set("view", view);
@@ -185,6 +213,7 @@ void Renderer::render() {
 
         object.model.draw(object.shader);
     }
+    glStencilMask(0xFF); // enable writing to stencil buffer so it can be cleared
 }
 
 void Renderer::render_ui() {
