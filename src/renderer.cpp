@@ -9,12 +9,20 @@ Renderer::Renderer(Window* window) {
     }
 }
 
+const std::vector<glm::vec3> window_positions = {
+    glm::vec3(-1.5f,  0.0f, -0.48f),
+    glm::vec3( 1.5f,  0.0f,  0.51f),
+    glm::vec3( 0.0f,  0.0f,  0.7f),
+    glm::vec3(-0.3f,  0.0f, -2.3f),
+    glm::vec3( 0.5f,  0.0f, -0.6f),
+};
+
 void Renderer::init() {
     glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // SHADERS
 
@@ -56,14 +64,14 @@ void Renderer::init() {
     MeshData container_mesh = Mesh::generate_cube_mesh();
     container_model.add_mesh(Mesh(container_mesh));
 
-    Model grass_model;
-    MeshData grass_mesh = Mesh::generate_plane_mesh();
+    Model window_model;
+    MeshData window_mesh = Mesh::generate_plane_mesh();
 
-    Texture grass_texture("assets/textures/grass.png");
-    grass_texture.set_type(Texture::Type::Diffuse);
-    grass_mesh.textures.push_back(grass_texture);
+    Texture window_texture("assets/textures/blending_transparent_window.png");
+    window_texture.set_type(Texture::Type::Diffuse);
+    window_mesh.textures.push_back(window_texture);
     
-    grass_model.add_mesh(grass_mesh);
+    window_model.add_mesh(window_mesh);
 
     Model cube_model;
     MeshData cube_mesh = Mesh::generate_cube_mesh();
@@ -76,7 +84,7 @@ void Renderer::init() {
     
     this->models.push_back(std::move(plane_model));
     this->models.push_back(std::move(container_model));
-    this->models.push_back(std::move(grass_model));
+    this->models.push_back(std::move(window_model));
     this->models.push_back(std::move(cube_model));
 
     // TRANSFORMS
@@ -88,11 +96,6 @@ void Renderer::init() {
 
     Transform container_transform(1.0f);
     this->transforms.push_back(std::move(container_transform));
-
-    Transform grass_transform(1.0f);
-    grass_transform = glm::translate(grass_transform, glm::vec3(-1.0f, 0.0f, 2.0f));
-    grass_transform = glm::rotate(grass_transform, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    this->transforms.push_back(std::move(grass_transform));
 
     Transform cube1_transform(1.0f);
     cube1_transform = glm::translate(cube1_transform, glm::vec3(-1.0f, 0.0f, -1.0f));
@@ -108,6 +111,13 @@ void Renderer::init() {
     this->transforms.push_back(std::move(cube1_transform));
     this->transforms.push_back(std::move(cube2_transform));
 
+    for (const auto& pos : window_positions) {
+        Transform window_transform(1.0f);
+        window_transform = glm::translate(window_transform, pos);
+        window_transform = glm::rotate(window_transform, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        this->transforms.push_back(std::move(window_transform));
+    }
+
     // ENTITIES
 
     // Add plane
@@ -116,16 +126,19 @@ void Renderer::init() {
     // Add container
     this->entities.push_back({1, 1, 1});
     
-    // Add grass
-    this->entities.push_back({0, 2, 2});
-
     // Add two marble cubes
+    this->entities.push_back({0, 3, 2});
     this->entities.push_back({0, 3, 3});
-    this->entities.push_back({0, 3, 4});
 
     // Add upscaled cubes for stencil drawing
+    this->entities.push_back({2, 3, 4});
     this->entities.push_back({2, 3, 5});
-    this->entities.push_back({2, 3, 6});
+
+    // Add window
+    for (size_t i = 0; i < window_positions.size(); i++) {
+        float distance = glm::length(window->state.camera_pos - window_positions[i]);
+        this->transparent_entities[distance] = {0, 2, 6 + i};
+    }
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -192,6 +205,13 @@ void Renderer::update() {
     container_shader.set("spotLight.constant", 1.0f);
     container_shader.set("spotLight.linear", 0.09f);
     container_shader.set("spotLight.quadratic", 0.032f);
+
+    // TODO: replace with inplace sort?
+    this->transparent_entities.clear();
+    for (size_t i = 0; i < window_positions.size(); i++) {
+        float distance = glm::length(window->state.camera_pos - window_positions[i]);
+        this->transparent_entities[distance] = {0, 2, 6 + i};
+    }
 }
 
 void Renderer::render() {
@@ -218,12 +238,12 @@ void Renderer::render() {
         const Transform& transform = this->transforms[entity.transform_id];
 
         // Write to stencil buffer for the 2 marble cubes
-        if (i == 3) {
+        if (i == 2) {
             glStencilMask(0xFF); // enable writing to stencil buffer
         }
 
         // Draw outlines of the 2 marble cubes
-        if (i == 5) {
+        if (i == 4) {
             glStencilFunc(GL_NOTEQUAL, 1, 0xFF); // only pass fragments not overlapping with cubes
             glStencilMask(0x00); // disable writing to stencil buffer
             glDisable(GL_DEPTH_TEST); // always draw outline regardless of depth
@@ -236,8 +256,23 @@ void Renderer::render() {
 
         model.draw(shader);
     }
+    glEnable(GL_DEPTH_TEST);
     glStencilFunc(GL_ALWAYS, 1, 0xFF); // have fragments always pass the stencil test
     glStencilMask(0xFF); // enable writing to stencil buffer so it can be cleared
+
+    for (auto it = this->transparent_entities.rbegin(); it != this->transparent_entities.rend(); it++) {
+        const Entity& entity = it->second;
+        const Shader& shader = this->shaders[entity.shader_id];
+        const Model& model = this->models[entity.model_id];
+        const Transform& transform = this->transforms[entity.transform_id];
+
+        shader.use();
+        shader.set("model", transform);
+        shader.set("view", view);
+        shader.set("projection", projection);
+
+        model.draw(shader);
+    }
 }
 
 void Renderer::render_ui() {
