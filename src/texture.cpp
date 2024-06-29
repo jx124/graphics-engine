@@ -3,7 +3,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-Texture::Texture(const std::string& image_path) : index(num_textures) {
+Texture::Texture(const std::string& image_path) : unit(num_textures) {
     glGenTextures(1, &this->id);
     glActiveTexture(GL_TEXTURE0 + num_textures++);
     glBindTexture(GL_TEXTURE_2D, this->id);
@@ -32,7 +32,7 @@ Texture::Texture(const std::string& image_path) : index(num_textures) {
     stbi_image_free(data);
 }
 
-Texture::Texture(const ImageData& image_data) : index(num_textures) {
+Texture::Texture(const ImageData& image_data) : unit(num_textures) {
     glGenTextures(1, &this->id);
     glActiveTexture(GL_TEXTURE0 + num_textures++);
     glBindTexture(GL_TEXTURE_2D, this->id);

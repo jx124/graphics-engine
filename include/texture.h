@@ -32,7 +32,7 @@ public:
 
     GLuint id;
     int width, height, n_channels;
-    int index; // active shader slot for setting shader uniforms
+    int unit; // active shader slot for setting shader uniforms
     static inline int num_textures = 0;
     std::string type;
     std::string path;

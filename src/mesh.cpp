@@ -39,7 +39,7 @@ void Mesh::draw(const Shader& shader) {
     GLuint n_height = 1;
 
     for (size_t i = 0; i < this->textures.size(); i++) {
-        glActiveTexture(GL_TEXTURE0 + i);
+        glActiveTexture(GL_TEXTURE0 + this->textures[i].unit);
 
         std::string number;
         std::string name = textures[i].type;
@@ -53,10 +53,9 @@ void Mesh::draw(const Shader& shader) {
             number = std::to_string(n_height++);
         }
 
-        shader.set(name + number, static_cast<int>(i));
+        shader.set(name + number, this->textures[i].unit);
         glBindTexture(GL_TEXTURE_2D, this->textures[i].id);
     }
-    glActiveTexture(GL_TEXTURE0);
 
     // draw mesh
     this->VAO.bind();

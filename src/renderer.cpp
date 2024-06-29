@@ -53,8 +53,8 @@ void Renderer::init() {
     Texture specular_map("assets/textures/container2_specular.png");
 
     container_shader.use();
-    container_shader.set("material.diffuse", container_texture.index);
-    container_shader.set("material.specular", specular_map.index);
+    container_shader.set("material.diffuse", container_texture.unit);
+    container_shader.set("material.specular", specular_map.unit);
 
     Model container_model;
     MeshData container_mesh = Mesh::generate_cube_mesh();
