@@ -12,6 +12,7 @@
 
 class Shader {
 public:
+    Shader() = default;
     Shader(std::string vertex_path, std::string fragment_path);
     
     void use() const { glUseProgram(this->id); };

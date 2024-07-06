@@ -140,6 +140,8 @@ void Renderer::init() {
         this->transparent_entities[distance] = {0, 2, 6 + i};
     }
 
+    this->framebuffer = Framebuffer(this->window->width, this->window->height);
+
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -215,7 +217,10 @@ void Renderer::update() {
 }
 
 void Renderer::render() {
+    // Draw to framebuffer we created
+    this->framebuffer.bind();
     glEnable(GL_DEPTH_TEST);
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     // Replace stencil buffer value with 1 (stencil func ref value) when the stencil test passes
@@ -278,6 +283,14 @@ void Renderer::render() {
 
         model.draw(shader);
     }
+
+    // Switch back to default framebuffer
+    this->framebuffer.unbind();
+    glDisable(GL_DEPTH_TEST);// we don't want any fragments to be discarded
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    this->framebuffer.draw_to_screen();
 }
 
 void Renderer::render_ui() {

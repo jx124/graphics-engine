@@ -7,6 +7,7 @@
 #include "elementbuffer.h"
 #include "shader.h"
 #include "texture.h"
+#include "framebuffer.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -44,4 +45,9 @@ private:
 
     std::vector<Entity> entities;
     std::map<float, Entity> transparent_entities; // sorted map with key = distance
+
+    Framebuffer framebuffer;
+    // GLuint framebuffer, quadVAO, texture_colorbuffer;
+    // int texture_unit;
+    // Shader screen_shader;
 };

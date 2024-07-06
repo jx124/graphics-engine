@@ -1,5 +1,4 @@
 #include "window.h"
-#include <csignal>
 
 Window::Window(int width, int height, std::string title) : width(width), height(height), title(title) {
     glfwInit();
@@ -155,8 +154,6 @@ void Window::error_message_callback(GLenum source, GLenum type, GLuint id, GLenu
 
     std::fprintf(stderr, "[OpenGL] %s: %s. Severity: %s. Message: %s\n",
             type_str.c_str(), source_str.c_str(), severity_str.c_str(), message);
-    glFinish();
-    raise(SIGTRAP);
 }
 
 void Window::mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {

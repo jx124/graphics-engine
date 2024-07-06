@@ -65,6 +65,17 @@ Texture::Texture(const ImageData& image_data) : unit(num_textures) {
     }
 }
 
+Texture::Texture(int width, int height) : unit(num_textures) {
+    glGenTextures(1, &this->id);
+    glActiveTexture(GL_TEXTURE0 + num_textures++);
+    glBindTexture(GL_TEXTURE_2D, this->id);
+    
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+}
+
 void Texture::set_type(Texture::Type type) {
     switch (type) {
     case Texture::Type::Diffuse: default:

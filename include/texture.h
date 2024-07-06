@@ -16,8 +16,10 @@ struct ImageData {
 
 class Texture {
 public:
+    Texture() = default;
     Texture(const std::string& image_path);
     Texture(const ImageData& image_data);
+    Texture(int width, int height); // allocate empty texture as memory
 
     enum class Type {
         Diffuse,
