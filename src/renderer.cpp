@@ -142,6 +142,17 @@ void Renderer::init() {
 
     this->framebuffer = Framebuffer(this->window->width, this->window->height);
 
+    const std::vector<std::string> faces = {
+        "assets/textures/skybox/right.jpg",
+        "assets/textures/skybox/left.jpg",
+        "assets/textures/skybox/top.jpg",
+        "assets/textures/skybox/bottom.jpg",
+        "assets/textures/skybox/front.jpg",
+        "assets/textures/skybox/back.jpg",
+    };
+
+    this->skybox = CubeMap(faces);
+
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -228,10 +239,6 @@ void Renderer::render() {
     glStencilFunc(GL_ALWAYS, 1, 0xFF); // have fragments always pass the stencil test
     glStencilMask(0x00); // disable writing to stencil buffer
 
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CW);
-
     glm::mat4 view = glm::lookAt(window->state.camera_pos,
                                  window->state.camera_pos + window->state.camera_front,
                                  window->state.camera_up);
@@ -239,6 +246,10 @@ void Renderer::render() {
     glm::mat4 projection;
     float aspect_ratio = static_cast<float>(window->width) / window->height;
     projection = glm::perspective(glm::radians(window->state.fov), aspect_ratio, 0.1f, 100.0f);
+
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CW);
 
     for (size_t i = 0; i < this->entities.size(); i++) {
         const Entity& entity = this->entities[i];
@@ -265,10 +276,14 @@ void Renderer::render() {
 
         model.draw(shader);
     }
+
     glEnable(GL_DEPTH_TEST);
     glStencilFunc(GL_ALWAYS, 1, 0xFF); // have fragments always pass the stencil test
     glStencilMask(0xFF); // enable writing to stencil buffer so it can be cleared
     glDisable(GL_CULL_FACE);
+
+    // Render skybox
+    this->skybox.draw(view, projection);
 
     for (auto it = this->transparent_entities.rbegin(); it != this->transparent_entities.rend(); it++) {
         const Entity& entity = it->second;

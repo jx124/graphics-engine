@@ -8,6 +8,7 @@
 #include "shader.h"
 #include "texture.h"
 #include "framebuffer.h"
+#include "cubemap.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -47,7 +48,5 @@ private:
     std::map<float, Entity> transparent_entities; // sorted map with key = distance
 
     Framebuffer framebuffer;
-    // GLuint framebuffer, quadVAO, texture_colorbuffer;
-    // int texture_unit;
-    // Shader screen_shader;
+    CubeMap skybox;
 };

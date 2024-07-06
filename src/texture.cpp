@@ -125,3 +125,51 @@ std::vector<Texture> Texture::load_textures(std::vector<std::string> image_paths
     return result;
 }
 
+Texture Texture::load_cubemap(const std::vector<std::string>& faces, int texture_unit) {
+    Texture texture{};
+    glGenTextures(1, &texture.id);
+    glActiveTexture(GL_TEXTURE0 + texture_unit);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texture.id);
+    texture.unit = texture_unit;
+
+#ifdef DEBUG
+    if (faces.size() != 6) {
+        std::cout << "Warning: number of cubemap images not equal to 6." << std::endl;
+    }
+#endif
+
+    unsigned char* data;
+    int width, height, n_channels;
+    GLenum format;
+
+    stbi_set_flip_vertically_on_load(false);
+    for (size_t i = 0; i < faces.size(); i++) {
+        data = stbi_load(faces[i].c_str(), &width, &height, &n_channels, 0);
+
+        switch (n_channels) {
+        case 1:
+            format = GL_RED; break;
+        case 3:
+            format = GL_RGB; break;
+        case 4: default:
+            format = GL_RGBA; break;
+        }
+
+        if (data) {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+            stbi_image_free(data);
+        } else {
+            std::cerr << "Failed to load cubemap face " << faces[i] << std::endl;
+            std::terminate();
+        }
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return texture;
+}

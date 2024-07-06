@@ -31,6 +31,7 @@ public:
     void set_type(Texture::Type type);
 
     static std::vector<Texture> load_textures(std::vector<std::string> image_paths);
+    static Texture load_cubemap(const std::vector<std::string>& faces, int texture_unit = 0);
 
     GLuint id;
     int width, height, n_channels;
