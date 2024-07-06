@@ -127,12 +127,12 @@ void Renderer::init() {
     this->entities.push_back({1, 1, 1});
     
     // Add two marble cubes
-    this->entities.push_back({0, 3, 2});
-    this->entities.push_back({0, 3, 3});
+    this->entities.push_back({0, 3, 2, true});
+    this->entities.push_back({0, 3, 3, true});
 
     // Add upscaled cubes for stencil drawing
-    this->entities.push_back({2, 3, 4});
-    this->entities.push_back({2, 3, 5});
+    this->stencil_entities.push_back({2, 3, 4});
+    this->stencil_entities.push_back({2, 3, 5});
 
     // Add window
     for (size_t i = 0; i < window_positions.size(); i++) {
@@ -236,8 +236,8 @@ void Renderer::render() {
 
     // Replace stencil buffer value with 1 (stencil func ref value) when the stencil test passes
     glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
-    glStencilFunc(GL_ALWAYS, 1, 0xFF); // have fragments always pass the stencil test
-    glStencilMask(0x00); // disable writing to stencil buffer
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);  // have fragments always pass the stencil test
+    glStencilMask(0x00);                // disable writing to stencil buffer
 
     glm::mat4 view = glm::lookAt(window->state.camera_pos,
                                  window->state.camera_pos + window->state.camera_front,
@@ -251,22 +251,15 @@ void Renderer::render() {
     glCullFace(GL_BACK);
     glFrontFace(GL_CW);
 
-    for (size_t i = 0; i < this->entities.size(); i++) {
-        const Entity& entity = this->entities[i];
+    for (const Entity& entity : this->entities) {
         const Shader& shader = this->shaders[entity.shader_id];
         const Model& model = this->models[entity.model_id];
         const Transform& transform = this->transforms[entity.transform_id];
 
-        // Write to stencil buffer for the 2 marble cubes
-        if (i == 2) {
+        if (entity.is_highlighted) {
             glStencilMask(0xFF); // enable writing to stencil buffer
-        }
-
-        // Draw outlines of the 2 marble cubes
-        if (i == 4) {
-            glStencilFunc(GL_NOTEQUAL, 1, 0xFF); // only pass fragments not overlapping with cubes
+        } else {
             glStencilMask(0x00); // disable writing to stencil buffer
-            glDisable(GL_DEPTH_TEST); // always draw outline regardless of depth
         }
 
         shader.use();
@@ -277,14 +270,13 @@ void Renderer::render() {
         model.draw(shader);
     }
 
-    glEnable(GL_DEPTH_TEST);
-    glStencilFunc(GL_ALWAYS, 1, 0xFF); // have fragments always pass the stencil test
-    glStencilMask(0xFF); // enable writing to stencil buffer so it can be cleared
+    glStencilMask(0x00);
     glDisable(GL_CULL_FACE);
 
     // Render skybox
     this->skybox.draw(view, projection);
 
+    // Render transparent objects from furthest to nearest so alpha blending works correctly
     for (auto it = this->transparent_entities.rbegin(); it != this->transparent_entities.rend(); it++) {
         const Entity& entity = it->second;
         const Shader& shader = this->shaders[entity.shader_id];
@@ -299,9 +291,30 @@ void Renderer::render() {
         model.draw(shader);
     }
 
+    // Draw stenciled i.e. highlighted objects
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);    // only pass fragments not overlapping with cubes
+    glStencilMask(0x00);                    // disable writing to stencil buffer
+    glDisable(GL_DEPTH_TEST);               // always draw outline regardless of depth
+
+    for (const Entity& entity : this->stencil_entities) {
+        const Shader& shader = this->shaders[entity.shader_id];
+        const Model& model = this->models[entity.model_id];
+        const Transform& transform = this->transforms[entity.transform_id];
+
+        shader.use();
+        shader.set("model", transform);
+        shader.set("view", view);
+        shader.set("projection", projection);
+
+        model.draw(shader);
+    }
+
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);  // have fragments always pass the stencil test
+    glStencilMask(0xFF);                // enable writing to stencil buffer so it can be cleared
+
     // Switch back to default framebuffer
     this->framebuffer.unbind();
-    glDisable(GL_DEPTH_TEST);// we don't want any fragments to be discarded
+    glDisable(GL_DEPTH_TEST);           // we don't want any fragments to be discarded
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 

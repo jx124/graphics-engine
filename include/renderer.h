@@ -25,6 +25,7 @@ struct Entity {
     size_t shader_id;
     size_t model_id;
     size_t transform_id;
+    bool is_highlighted = false;
 };
 
 using Transform = glm::mat4;
@@ -46,6 +47,7 @@ private:
 
     std::vector<Entity> entities;
     std::map<float, Entity> transparent_entities; // sorted map with key = distance
+    std::vector<Entity> stencil_entities;
 
     Framebuffer framebuffer;
     CubeMap skybox;
